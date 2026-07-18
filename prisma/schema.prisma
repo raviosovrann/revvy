@@ -1,0 +1,614 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// =============================================================================
+// USER & IDENTITY
+// =============================================================================
+
+model User {
+  id             String   @id @default(uuid())
+  authProviderId String   @unique
+  displayName    String
+  phone          String?
+  email          String?
+  avatarUrl      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  memberships      Membership[]
+  invitations      Invitation[]
+  customer         Customer?
+  workOrderAssignments WorkOrderAssignment[]
+  auditEvents      AuditEvent[]
+  deviceTokens     DeviceToken[]
+  notifications    Notification[]
+
+  @@map("users")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   // IOS | ANDROID
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+// =============================================================================
+// SHOP & MEMBERSHIP
+// =============================================================================
+
+model Shop {
+  id              String   @id @default(uuid())
+  name            String
+  phone           String?
+  address         String?
+  timezone        String   @default("America/New_York")
+  status          String   @default("DRAFT") // DRAFT | PUBLISHED | PAUSED | ARCHIVED
+  description     String?
+  logoUrl         String?
+  stripeAccountId String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  memberships   Membership[]
+  invitations   Invitation[]
+  services      Service[]
+  businessHours BusinessHour[]
+  holidayClosures HolidayClosure[]
+  customerShops CustomerShop[]
+  appointments  Appointment[]
+  workOrders    WorkOrder[]
+  subscription  ShopSubscription?
+  auditEvents   AuditEvent[]
+  onboarding    ShopOnboarding?
+
+  @@map("shops")
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  shopId    String
+  role      String   // OWNER | MANAGER | FRONT_DESK | TECHNICIAN
+  status    String   @default("ACTIVE") // INVITED | ACTIVE | SUSPENDED | DEACTIVATED
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  workOrderAssignments WorkOrderAssignment[]
+
+  @@unique([userId, shopId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id           String    @id @default(uuid())
+  shopId       String
+  invitedById  String?
+  name         String
+  contactType  String    // PHONE | EMAIL
+  contactValue String
+  role         String    // MANAGER | FRONT_DESK | TECHNICIAN
+  tokenHash    String    @unique
+  status       String    @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  shop      Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  invitedBy User? @relation(fields: [invitedById], references: [id])
+
+  @@map("invitations")
+}
+
+model ShopOnboarding {
+  id                  String   @id @default(uuid())
+  shopId              String   @unique
+  shopProfileComplete Boolean  @default(false)
+  serviceAdded        Boolean  @default(false)
+  employeeInvited     Boolean  @default(false)
+  subscriptionStarted Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_onboardings")
+}
+
+// =============================================================================
+// BUSINESS HOURS
+// =============================================================================
+
+model BusinessHour {
+  id        String   @id @default(uuid())
+  shopId    String
+  dayOfWeek Int      // 0=Sunday, 6=Saturday
+  opensAt   String   // HH:mm format
+  closesAt  String   // HH:mm format
+  isClosed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, dayOfWeek])
+  @@map("business_hours")
+}
+
+model HolidayClosure {
+  id        String   @id @default(uuid())
+  shopId    String
+  date      DateTime
+  name      String?
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, date])
+  @@map("holiday_closures")
+}
+
+// =============================================================================
+// CUSTOMERS & VEHICLES
+// =============================================================================
+
+model Customer {
+  id          String   @id @default(uuid())
+  userId      String?  @unique
+  displayName String
+  phone       String?
+  email       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User?          @relation(fields: [userId], references: [id])
+  vehicles      Vehicle[]
+  customerShops CustomerShop[]
+  appointments  Appointment[]
+
+  @@map("customers")
+}
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  customerId   String
+  year         Int
+  make         String
+  model        String
+  trim         String?
+  vin          String?
+  licensePlate String?
+  nickname     String?
+  mileage      Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@map("vehicles")
+}
+
+model CustomerShop {
+  id         String   @id @default(uuid())
+  customerId String
+  shopId     String
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, shopId])
+  @@map("customer_shops")
+}
+
+// =============================================================================
+// SERVICES & PRICING
+// =============================================================================
+
+model Service {
+  id                 String   @id @default(uuid())
+  shopId             String
+  name               String
+  description        String?
+  category           String?
+  priceType          String   // FIXED_PRICE | STARTING_AT | INSPECTION_REQUIRED
+  priceMinor         Int?     // Price in cents for FIXED_PRICE
+  startingPriceMinor Int?     // Starting price for STARTING_AT
+  inspectionFeeMinor Int?     // Inspection fee for INSPECTION_REQUIRED
+  durationMinutes    Int
+  currency           String   @default("USD")
+  taxBehavior        String   @default("EXCLUSIVE") // EXCLUSIVE | INCLUSIVE
+  active             Boolean  @default(true)
+  bookingAvailable   Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  shop              Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  appointmentServices AppointmentService[]
+
+  @@map("services")
+}
+
+// =============================================================================
+// APPOINTMENTS
+// =============================================================================
+
+model Appointment {
+  id         String   @id @default(uuid())
+  shopId     String
+  customerId String
+  vehicleId  String
+  startsAt   DateTime
+  endsAt     DateTime
+  status     String   @default("REQUESTED") // REQUESTED | CONFIRMED | RESCHEDULED | CHECKED_IN | IN_PROGRESS | COMPLETED | CANCELLED | NO_SHOW
+  timezone   String
+  cancelReason String?
+  notes      String?
+  idempotencyKey String? @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?
+
+  shop     Shop     @relation(fields: [shopId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  services    AppointmentService[]
+  workOrder   WorkOrder?
+  statusHistory AppointmentStatusHistory[]
+
+  @@index([shopId, startsAt])
+  @@index([customerId])
+  @@map("appointments")
+}
+
+model AppointmentService {
+  id            String @id @default(uuid())
+  appointmentId String
+  serviceId     String
+
+  serviceNameSnapshot  String
+  priceTypeSnapshot    String
+  priceMinorSnapshot   Int?
+  startingPriceSnapshot Int?
+  inspectionFeeSnapshot Int?
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id])
+
+  @@map("appointment_services")
+}
+
+model AppointmentStatusHistory {
+  id            String   @id @default(uuid())
+  appointmentId String
+  previousStatus String?
+  newStatus     String
+  actorId       String?
+  note          String?
+  createdAt     DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@map("appointment_status_history")
+}
+
+// =============================================================================
+// WORK ORDERS
+// =============================================================================
+
+model WorkOrder {
+  id            String   @id @default(uuid())
+  shopId        String
+  appointmentId String?  @unique
+  status        String   @default("DRAFT") // DRAFT | SCHEDULED | CHECKED_IN | IN_PROGRESS | WAITING_FOR_APPROVAL | APPROVED | WORK_COMPLETED | READY_FOR_PICKUP | COMPLETED | CANCELLED
+  odometer      Int?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shop        Shop         @relation(fields: [shopId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  assignments  WorkOrderAssignment[]
+  notes_       WorkOrderNote[]   @relation("WorkOrderNotes")
+  media        MediaAsset[]
+  estimates    Estimate[]
+  invoice      Invoice?
+  statusHistory WorkOrderStatusHistory[]
+
+  @@index([shopId, status])
+  @@map("work_orders")
+}
+
+model WorkOrderAssignment {
+  id          String   @id @default(uuid())
+  workOrderId String
+  userId      String
+  membershipId String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  workOrder  WorkOrder   @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id])
+  membership Membership? @relation(fields: [membershipId], references: [id])
+
+  @@unique([workOrderId, userId])
+  @@map("work_order_assignments")
+}
+
+model WorkOrderNote {
+  id          String   @id @default(uuid())
+  workOrderId String
+  authorId    String
+  content     String
+  createdAt   DateTime @default(now())
+
+  workOrder WorkOrder @relation("WorkOrderNotes", fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@map("work_order_notes")
+}
+
+model WorkOrderStatusHistory {
+  id             String   @id @default(uuid())
+  workOrderId    String
+  previousStatus String?
+  newStatus      String
+  actorId        String?
+  note           String?
+  createdAt      DateTime @default(now())
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@map("work_order_status_history")
+}
+
+model MediaAsset {
+  id          String   @id @default(uuid())
+  workOrderId String
+  url         String
+  mimeType    String
+  fileSize    Int?
+  description String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@map("media_assets")
+}
+
+// =============================================================================
+// ESTIMATES
+// =============================================================================
+
+model Estimate {
+  id           String   @id @default(uuid())
+  workOrderId  String
+  status       String   @default("DRAFT") // DRAFT | SENT | APPROVED | REJECTED | EXPIRED | CANCELLED
+  subtotalMinor Int     @default(0)
+  taxMinor     Int      @default(0)
+  discountMinor Int     @default(0)
+  totalMinor   Int      @default(0)
+  currency     String   @default("USD")
+  notes        String?
+  sentAt       DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workOrder   WorkOrder          @relation(fields: [workOrderId], references: [id])
+  lineItems   EstimateLineItem[]
+  approvals   EstimateApproval[]
+
+  @@map("estimates")
+}
+
+model EstimateLineItem {
+  id           String @id @default(uuid())
+  estimateId   String
+  description  String
+  quantity     Int    @default(1)
+  unitPriceMinor Int
+  totalMinor   Int
+  serviceNameSnapshot String?
+  createdAt    DateTime @default(now())
+
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+
+  @@map("estimate_line_items")
+}
+
+model EstimateApproval {
+  id         String   @id @default(uuid())
+  estimateId String
+  actorId    String
+  decision   String   // APPROVED | REJECTED
+  note       String?
+  decidedAt  DateTime @default(now())
+
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+
+  @@map("estimate_approvals")
+}
+
+// =============================================================================
+// INVOICES & PAYMENTS
+// =============================================================================
+
+model Invoice {
+  id            String   @id @default(uuid())
+  workOrderId   String?  @unique
+  shopId        String
+  customerId    String
+  status        String   @default("DRAFT") // DRAFT | OPEN | PARTIALLY_PAID | PAID | VOID | UNCOLLECTIBLE
+  subtotalMinor Int      @default(0)
+  taxMinor      Int      @default(0)
+  discountMinor Int      @default(0)
+  totalMinor    Int      @default(0)
+  paidMinor     Int      @default(0)
+  currency      String   @default("USD")
+  invoiceNumber String?
+  notes         String?
+  sentAt        DateTime?
+  dueAt         DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workOrder WorkOrder?     @relation(fields: [workOrderId], references: [id])
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id           String @id @default(uuid())
+  invoiceId    String
+  description  String
+  quantity     Int    @default(1)
+  unitPriceMinor Int
+  totalMinor   Int
+  serviceNameSnapshot String?
+  createdAt    DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_line_items")
+}
+
+model Payment {
+  id                String    @id @default(uuid())
+  invoiceId         String
+  providerPaymentId String?   @unique
+  amountMinor       Int
+  currency          String    @default("USD")
+  status            String    @default("CREATED") // CREATED | REQUIRES_ACTION | PROCESSING | SUCCEEDED | FAILED | REFUNDED | DISPUTED
+  paymentMethod     String?
+  refundAmountMinor Int?
+  refundReason      String?
+  paidAt            DateTime?
+  idempotencyKey    String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+
+// =============================================================================
+// SUBSCRIPTIONS
+// =============================================================================
+
+model ShopSubscription {
+  id                   String    @id @default(uuid())
+  shopId               String    @unique
+  planName             String    // STARTER | GROWTH | PRO
+  status               String    @default("TRIALING") // TRIALING | ACTIVE | PAST_DUE | PAUSED | CANCELLED | INCOMPLETE
+  stripeSubscriptionId String?   @unique
+  stripeCustomerId     String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  trialEndsAt          DateTime?
+  cancelledAt          DateTime?
+  gracePeriodEndsAt    DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_subscriptions")
+}
+
+model PlanEntitlement {
+  id          String @id @default(uuid())
+  planName    String // STARTER | GROWTH | PRO
+  featureKey  String
+  limitValue  Int?
+  enabled     Boolean @default(true)
+
+  @@unique([planName, featureKey])
+  @@map("plan_entitlements")
+}
+
+// =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+model Notification {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // INVITATION_CREATED | APPOINTMENT_REQUESTED | APPOINTMENT_CONFIRMED | etc.
+  title        String
+  body         String
+  channel      String   // PUSH | SMS | EMAIL | IN_APP
+  status       String   @default("PENDING") // PENDING | SENT | DELIVERED | FAILED
+  data         Json?
+  idempotencyKey String? @unique
+  readAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// =============================================================================
+// AUDIT LOG
+// =============================================================================
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  shopId     String?
+  userId     String?
+  action     String
+  resource   String?
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([shopId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_events")
+}
+
+// =============================================================================
+// WEBHOOK EVENTS (idempotent processing)
+// =============================================================================
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  provider    String   // STRIPE | TWILIO
+  providerEventId String @unique
+  eventType   String
+  payload     Json
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([provider, processed])
+  @@map("webhook_events")
+}

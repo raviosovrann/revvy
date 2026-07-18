@@ -3,8 +3,11 @@ import { useNavigation } from '@react-navigation/native';
 export function useResetToHome() {
   const navigation = useNavigation<any>();
   return () => {
-    // Escape the nested tab navigator and pop back to the root landing screen.
-    const root = navigation.getParent?.() ?? navigation;
+    // Walk up to the root navigator (past any nested stacks/tabs) and navigate to the landing screen.
+    let root = navigation;
+    while (root.getParent?.()) {
+      root = root.getParent();
+    }
     root.navigate('index');
   };
 }

@@ -10,14 +10,14 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 **Status:** Done (Supabase Auth selected - ADR-001)
 
 ### Story 0.2 - Finalize Database Hosting Decision
-**Status:** Open (ADR-002)
+**Status:** Deferred (decision not needed for product exploration)
 - [ ] Evaluate Supabase Postgres vs Neon vs Railway
 - [ ] Confirm Prisma compatibility and connection pooling
 - [ ] Document backup and migration strategy
 - [ ] Update ADR-002 with final decision
 
 ### Story 0.3 - Finalize Payment/Connect Flow Decision
-**Status:** Open (ADR-003)
+**Status:** Deferred (decision not needed for product exploration)
 - [ ] Legal/accounting review of Stripe Connect options
 - [ ] Determine merchant-of-record responsibilities
 - [ ] Decide on destination charges vs separate accounts vs postpone
@@ -25,7 +25,7 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 - [ ] Update ADR-003 with final decision
 
 ### Story 0.4 - Resolve Remaining Open Questions
-**Status:** Open
+**Status:** Deferred (decision not needed for product exploration)
 - [ ] Decide: public shop search vs QR/deep links only for pilot (ADR-005)
 - [ ] Decide: automatic vs manual appointment confirmation
 - [ ] Decide: bay/technician capacity model for pilot
@@ -96,6 +96,10 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 
 ### Story 2.1 - Owner Signup and Authentication
 **Priority:** P0
+
+> **Note:** For product exploration, the mobile auth screens currently bypass real phone/OTP verification and navigate directly into the app. This must be re-enabled before launch.
+
+- [x] Scaffold sign-in / create-shop / verify-otp screens (verification bypassed for exploration)
 - [ ] Implement phone OTP flow in mobile app via Supabase Auth
 - [ ] Implement OTP verification screen
 - [ ] Create or link `User` record on first authentication

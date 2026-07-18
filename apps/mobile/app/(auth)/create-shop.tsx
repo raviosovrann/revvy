@@ -16,9 +16,8 @@ export default function CreateShopScreen() {
   const [phone, setPhone] = useState('');
 
   const handleContinue = () => {
-    if (!phone.trim()) return;
-    // TODO: Implement shop creation flow with OTP verification
-    router.push({ pathname: '/(auth)/verify-otp', params: { phone, flow: 'create-shop' } });
+    // V1 scaffold: skip real phone verification for product exploration
+    router.replace('/(tabs)');
   };
 
   return (
@@ -50,9 +49,8 @@ export default function CreateShopScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.button, !phone.trim() && styles.buttonDisabled]}
+            style={styles.button}
             onPress={handleContinue}
-            disabled={!phone.trim()}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Continue</Text>

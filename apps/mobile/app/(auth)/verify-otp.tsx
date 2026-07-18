@@ -13,17 +13,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
-  const { phone, flow } = useLocalSearchParams<{ phone: string; flow?: string }>();
+  const { phone } = useLocalSearchParams<{ phone: string }>();
   const [code, setCode] = useState('');
 
   const handleVerify = () => {
-    if (code.length < 6) return;
-    // TODO: Implement Supabase OTP verification
-    if (flow === 'create-shop') {
-      router.replace('/(tabs)');
-    } else {
-      router.replace('/(tabs)');
-    }
+    // V1 scaffold: skip real OTP verification for product exploration
+    router.replace('/(tabs)');
   };
 
   return (
@@ -54,9 +49,8 @@ export default function VerifyOtpScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.button, code.length < 6 && styles.buttonDisabled]}
+            style={styles.button}
             onPress={handleVerify}
-            disabled={code.length < 6}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Verify</Text>

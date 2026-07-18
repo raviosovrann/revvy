@@ -16,9 +16,8 @@ export default function SignInScreen() {
   const [phone, setPhone] = useState('');
 
   const handleSendOtp = () => {
-    if (!phone.trim()) return;
-    // TODO: Implement Supabase phone OTP
-    router.push({ pathname: '/(auth)/verify-otp', params: { phone } });
+    // V1 scaffold: skip real phone verification for product exploration
+    router.replace('/(tabs)');
   };
 
   return (
@@ -50,9 +49,8 @@ export default function SignInScreen() {
           />
 
           <TouchableOpacity
-            style={[styles.button, !phone.trim() && styles.buttonDisabled]}
+            style={styles.button}
             onPress={handleSendOtp}
-            disabled={!phone.trim()}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Send Code</Text>

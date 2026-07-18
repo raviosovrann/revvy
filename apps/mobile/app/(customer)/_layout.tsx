@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tabLabelActive: {
-    color: colors.accent,
+    color: colors.secondary,
   },
   activeIndicator: {
     position: 'absolute',
@@ -123,6 +123,6 @@ const styles = StyleSheet.create({
     left: '20%',
     right: '20%',
     height: 2,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.secondary,
   },
 });

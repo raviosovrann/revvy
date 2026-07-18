@@ -50,9 +50,10 @@ export default function LandingScreen() {
 
       <Button title="Continue" onPress={handleContinue} style={styles.continueButton} />
 
-      <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={styles.signInLink}>
+      {/* Sign-in flow is disabled while we focus on UI/UX exploration. */}
+      {/* <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={styles.signInLink}>
         <Text style={styles.signInText}>Sign in with phone number</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScrollView>
   );
 }
@@ -107,8 +108,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   roleOptionActive: {
-    borderColor: colors.accent,
-    backgroundColor: 'rgba(79, 70, 229, 0.15)',
+    borderColor: colors.secondary,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
   radio: {
     width: 20,
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.secondary,
   },
   roleText: {
     flex: 1,

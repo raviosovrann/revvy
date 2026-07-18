@@ -62,8 +62,8 @@ export function Tag({
 }) {
   const variantStyles = {
     neutral: { backgroundColor: colors.surfaceLight, color: colors.text },
-    accent: { backgroundColor: colors.accent, color: colors.text },
-    'accent-2': { backgroundColor: 'rgba(79, 70, 229, 0.2)', color: colors.accentLight },
+    accent: { backgroundColor: colors.secondary, color: colors.text },
+    'accent-2': { backgroundColor: 'rgba(139, 92, 246, 0.2)', color: colors.secondaryLight },
     outline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.divider, color: colors.text },
   };
 

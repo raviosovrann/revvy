@@ -4,9 +4,10 @@ import { ScreenWrapper } from '@/components/screen-wrapper';
 import { ScreenHeader } from '@/components/header';
 import { ChevronRightIcon, LogoutIcon } from '@/components/icons';
 import { colors, spacing, typography } from '@/constants/theme';
+import { useResetToHome } from '@/lib/reset-to-home';
 
 export default function TechProfileScreen() {
-  const router = useRouter();
+  const resetToHome = useResetToHome();
 
   return (
     <ScreenWrapper>
@@ -41,7 +42,7 @@ export default function TechProfileScreen() {
 
       <TouchableOpacity
         style={styles.logout}
-        onPress={() => router.replace('/role-selector')}
+        onPress={resetToHome}
         activeOpacity={0.8}
       >
         <LogoutIcon size={18} color={colors.error} />

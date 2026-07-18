@@ -6,9 +6,11 @@ import { Button } from '@/components/ui';
 import { ChevronRightIcon } from '@/components/icons';
 import { colors, spacing, typography } from '@/constants/theme';
 import { PROFILE_ROWS } from '@/lib/mock-data';
+import { useResetToHome } from '@/lib/reset-to-home';
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
+  const resetToHome = useResetToHome();
   return (
     <ScreenWrapper>
       <ScreenHeader title="Profile" showBack={false} />
@@ -32,7 +34,7 @@ export default function CustomerProfileScreen() {
         ))}
       </View>
 
-      <Button title="Switch role" variant="ghost" onPress={() => router.replace('/role-selector')} style={styles.signOut} />
+      <Button title="Switch role" variant="ghost" onPress={resetToHome} style={styles.signOut} />
     </ScreenWrapper>
   );
 }

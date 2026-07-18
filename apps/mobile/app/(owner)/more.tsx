@@ -6,9 +6,11 @@ import { Button } from '@/components/ui';
 import { ChevronRightIcon } from '@/components/icons';
 import { colors, spacing, typography } from '@/constants/theme';
 import { MORE_MENU } from '@/lib/mock-data';
+import { useResetToHome } from '@/lib/reset-to-home';
 
 export default function OwnerMoreScreen() {
   const router = useRouter();
+  const resetToHome = useResetToHome();
 
   const routes: Record<string, string> = {
     o_team: '/(owner)/team',
@@ -49,7 +51,7 @@ export default function OwnerMoreScreen() {
         ))}
       </View>
 
-      <Button title="Switch role" variant="ghost" onPress={() => router.replace('/role-selector')} style={styles.signOut} />
+      <Button title="Switch role" variant="ghost" onPress={resetToHome} style={styles.signOut} />
     </ScreenWrapper>
   );
 }

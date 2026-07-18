@@ -41,7 +41,7 @@ export default function TechProfileScreen() {
 
       <TouchableOpacity
         style={styles.logout}
-        onPress={() => router.replace('/')}
+        onPress={() => router.replace('/role-selector')}
         activeOpacity={0.8}
       >
         <LogoutIcon size={18} color={colors.error} />

@@ -1,5 +1,5 @@
 import { RoleSelectorScreen } from '@/components/role-selector-screen';
 
-export default function IndexScreen() {
+export default function RoleSelectorRoute() {
   return <RoleSelectorScreen />;
 }

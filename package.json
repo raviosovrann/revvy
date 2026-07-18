@@ -4,7 +4,8 @@
   "private": true,
   "description": "Revvy - Mobile-first platform for independent auto-service businesses",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "pnpm -F @revvy/mobile dev",
+    "dev:all": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

@@ -49,7 +49,7 @@ export default function OwnerMoreScreen() {
         ))}
       </View>
 
-      <Button title="Switch role" variant="ghost" onPress={() => router.replace('/')} style={styles.signOut} />
+      <Button title="Switch role" variant="ghost" onPress={() => router.replace('/role-selector')} style={styles.signOut} />
     </ScreenWrapper>
   );
 }

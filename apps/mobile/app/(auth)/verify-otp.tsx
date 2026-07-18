@@ -18,7 +18,7 @@ export default function VerifyOtpScreen() {
 
   const handleVerify = () => {
     // V1 scaffold: skip real OTP verification for product exploration
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

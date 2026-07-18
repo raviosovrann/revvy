@@ -17,7 +17,7 @@ export default function CreateShopScreen() {
 
   const handleContinue = () => {
     // V1 scaffold: skip real phone verification for product exploration
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

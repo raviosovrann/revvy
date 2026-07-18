@@ -17,7 +17,7 @@ export default function SignInScreen() {
 
   const handleSendOtp = () => {
     // V1 scaffold: skip real phone verification for product exploration
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

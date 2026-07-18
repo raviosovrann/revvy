@@ -41,7 +41,7 @@ class ApiClient {
       throw error;
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   get<T>(path: string) {

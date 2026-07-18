@@ -20,7 +20,9 @@ function TabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={styles.tabBar}>
-      {state.routes.map((route: any, index: number) => {
+      {state.routes
+        .filter((route: any) => descriptors[route.key].options.href !== null)
+        .map((route: any, index: number) => {
         const { options } = descriptors[route.key];
         const label = options.tabBarLabel || options.title || route.name;
         const isFocused = state.index === index;
@@ -66,6 +68,18 @@ export default function CustomerLayout() {
       <Tabs.Screen name="appointments" options={{ title: 'Appointments' }} />
       <Tabs.Screen name="garage" options={{ title: 'Garage' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+
+      <Tabs.Screen name="shop" options={{ href: null }} />
+      <Tabs.Screen name="service" options={{ href: null }} />
+      <Tabs.Screen name="book-vehicle" options={{ href: null }} />
+      <Tabs.Screen name="book-slot" options={{ href: null }} />
+      <Tabs.Screen name="book-review" options={{ href: null }} />
+      <Tabs.Screen name="book-done" options={{ href: null }} />
+      <Tabs.Screen name="appointment-detail" options={{ href: null }} />
+      <Tabs.Screen name="estimate" options={{ href: null }} />
+      <Tabs.Screen name="invoice" options={{ href: null }} />
+      <Tabs.Screen name="pay" options={{ href: null }} />
+      <Tabs.Screen name="receipt" options={{ href: null }} />
     </Tabs>
   );
 }

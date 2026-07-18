@@ -18,7 +18,9 @@ function TabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={styles.tabBar}>
-      {state.routes.map((route: any, index: number) => {
+      {state.routes
+        .filter((route: any) => descriptors[route.key].options.href !== null)
+        .map((route: any, index: number) => {
         const { options } = descriptors[route.key];
         const label = options.tabBarLabel || options.title || route.name;
         const isFocused = state.index === index;
@@ -63,6 +65,12 @@ export default function TechLayout() {
       <Tabs.Screen name="index" options={{ title: 'Jobs' }} />
       <Tabs.Screen name="alerts" options={{ title: 'Alerts' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+
+      <Tabs.Screen name="job" options={{ href: null }} />
+      <Tabs.Screen name="inspection" options={{ href: null }} />
+      <Tabs.Screen name="photos" options={{ href: null }} />
+      <Tabs.Screen name="estimate-create" options={{ href: null }} />
+      <Tabs.Screen name="complete" options={{ href: null }} />
     </Tabs>
   );
 }

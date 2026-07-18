@@ -22,7 +22,9 @@ function TabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={styles.tabBar}>
-      {state.routes.map((route: any, index: number) => {
+      {state.routes
+        .filter((route: any) => descriptors[route.key].options.href !== null)
+        .map((route: any, index: number) => {
         const { options } = descriptors[route.key];
         const label = options.tabBarLabel || options.title || route.name;
         const isFocused = state.index === index;
@@ -69,6 +71,13 @@ export default function OwnerLayout() {
       <Tabs.Screen name="customers" options={{ title: 'Customers' }} />
       <Tabs.Screen name="services" options={{ title: 'Services' }} />
       <Tabs.Screen name="more" options={{ title: 'More' }} />
+
+      <Tabs.Screen name="team" options={{ href: null }} />
+      <Tabs.Screen name="invoices" options={{ href: null }} />
+      <Tabs.Screen name="subscription" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Screen name="service-edit" options={{ href: null }} />
     </Tabs>
   );
 }

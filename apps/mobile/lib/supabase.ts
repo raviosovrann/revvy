@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_AUTH_PROVIDER_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_AUTH_PROVIDER_KEY || '';
+const supabaseUrl =
+  process.env.EXPO_PUBLIC_AUTH_PROVIDER_URL || 'https://example.invalid';
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_AUTH_PROVIDER_KEY || 'development-placeholder-key';
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => SecureStore.getItemAsync(key),

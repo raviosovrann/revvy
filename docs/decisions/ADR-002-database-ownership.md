@@ -1,6 +1,6 @@
 # ADR-002: Database Ownership
 
-**Status:** Proposed  
+**Status:** Accepted
 **Date:** 2026-07-18  
 **Deciders:** Product Owner, Engineering
 
@@ -10,13 +10,19 @@ Revvy needs a managed PostgreSQL instance with Prisma ORM compatibility, connect
 
 ## Decision
 
-Pending. Options under evaluation:
+Use **Supabase Postgres** as the managed PostgreSQL provider for the pilot. Prisma remains the schema and migration owner; application traffic uses the pooled connection string and migrations use the direct connection string.
 
-- **Supabase Postgres:** Natural fit if using Supabase Auth; includes connection pooling via PgBouncer
-- **Neon:** Serverless Postgres with branching; strong Prisma compatibility
-- **Railway/Render managed Postgres:** Simpler deployment if API is hosted on the same platform
+Row-level security is defense in depth, not the primary application authorization boundary. The NestJS API must still resolve an active membership and scope every business query by `shopId`.
+
+Supabase automated backups must be enabled for staging and production, and restoration must be exercised before the pilot.
+
+## Alternatives Considered
+
+- **Neon:** Strong Prisma compatibility and branching, but less operational consolidation for the selected Supabase Auth stack.
+- **Railway/Render managed Postgres:** Simple co-location with the API, but fewer benefits than consolidating authentication, database, and storage for the pilot.
 
 ## Consequences
 
-- Must be decided before Phase 1 implementation begins
-- Choice affects connection string management, backup strategy, and migration tooling
+- Environments require both pooled `DATABASE_URL` and direct `DIRECT_DATABASE_URL` secrets.
+- Production schema changes run committed Prisma migrations with `prisma migrate deploy`; `db push` is not a deployment mechanism.
+- Restore testing and provider portability remain operational requirements.

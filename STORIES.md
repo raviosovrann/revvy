@@ -10,23 +10,26 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 **Status:** Done (Supabase Auth selected - ADR-001)
 
 ### Story 0.2 - Finalize Database Hosting Decision
-**Status:** Deferred (decision not needed for product exploration)
-- [ ] Evaluate Supabase Postgres vs Neon vs Railway
-- [ ] Confirm Prisma compatibility and connection pooling
-- [ ] Document backup and migration strategy
-- [ ] Update ADR-002 with final decision
+**Status:** Done (Supabase Postgres selected - ADR-002)
+- [x] Evaluate Supabase Postgres vs Neon vs Railway
+- [x] Confirm Prisma compatibility and connection pooling
+- [x] Document backup and migration strategy
+- [x] Update ADR-002 with final decision
 
 ### Story 0.3 - Finalize Payment/Connect Flow Decision
-**Status:** Deferred (decision not needed for product exploration)
-- [ ] Legal/accounting review of Stripe Connect options
-- [ ] Determine merchant-of-record responsibilities
-- [ ] Decide on destination charges vs separate accounts vs postpone
-- [ ] Document refund/dispute ownership
-- [ ] Update ADR-003 with final decision
+**Status:** Done for pilot (external collection selected; Stripe Connect deferred - ADR-003)
+- [x] Defer Stripe Connect pending legal/accounting review
+- [x] Keep Revvy out of customer money movement during the pilot
+- [x] Select externally collected payment recording
+- [x] Document the later refund/dispute decision dependency
+- [x] Update ADR-003 with the pilot decision
 
 ### Story 0.4 - Resolve Remaining Open Questions
-**Status:** Deferred (decision not needed for product exploration)
-- [ ] Decide: public shop search vs QR/deep links only for pilot (ADR-005)
+**Status:** Partially done; unresolved pilot configuration remains open
+- [x] Decide: QR/deep links only for pilot (ADR-005)
+- [x] Decide: push/in-app-first notification policy (ADR-004)
+- [x] Decide: online-only mutations for pilot (ADR-006)
+- [x] Decide: Supabase Storage with private buckets (ADR-007)
 - [ ] Decide: automatic vs manual appointment confirmation
 - [ ] Decide: bay/technician capacity model for pilot
 - [ ] Define service categories and fixed-price examples for NYC pilot
@@ -42,53 +45,55 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 
 ### Story 1.1 - Install Dependencies and Verify Monorepo
 **Priority:** P0
-- [ ] Run `pnpm install` and resolve any dependency conflicts
-- [ ] Verify Turborepo task orchestration works
-- [ ] Verify all workspace packages resolve correctly
+- [x] Run `pnpm install` and resolve any dependency conflicts
+- [x] Verify Turborepo task orchestration works
+- [x] Verify all workspace packages resolve correctly
 
 ### Story 1.2 - Implement Supabase Auth Token Validation (API)
 **Priority:** P0
-- [ ] Implement JWT validation in `AuthService.validateSupabaseToken()`
-- [ ] Verify issuer, audience, signature, and expiry
-- [ ] Wire `AuthGuard` to resolve user identity from token
-- [ ] Add unit tests for valid, expired, and malformed tokens
-- [ ] Add `GET /api/v1/me` returning authenticated user profile
+- [x] Implement authoritative Supabase token validation in `AuthService.validateSupabaseToken()`
+- [x] Delegate issuer, audience, signature, expiry, and revocation validation to Supabase `auth.getUser`
+- [x] Wire `AuthGuard` to resolve provider and local user identity from the token
+- [x] Add unit tests for valid, expired, and malformed tokens
+- [x] Add `GET /api/v1/me` returning authenticated user profile
 
 ### Story 1.3 - Database Setup and First Migration
 **Priority:** P0
 - [ ] Set up local PostgreSQL instance
-- [ ] Run `prisma migrate dev` to create initial migration
+- [x] Commit the reviewed initial Prisma migration
 - [ ] Run `prisma db seed` to populate plan entitlements
-- [ ] Verify Prisma Client generation
-- [ ] Add Prisma service module to NestJS app
+- [x] Verify Prisma Client generation and schema validation
+- [x] Add global Prisma service module to NestJS app
 
 ### Story 1.4 - Error Envelope and Request ID Middleware
 **Priority:** P0
-- [ ] Wire `GlobalExceptionFilter` to the NestJS app
-- [ ] Add request ID generation middleware (UUID)
-- [ ] Ensure all error responses follow the standard envelope format
-- [ ] Add integration tests for error responses
+- [x] Wire `GlobalExceptionFilter` to the NestJS app
+- [x] Add request ID generation middleware (UUID)
+- [x] Ensure all error responses follow the standard envelope format
+- [x] Add filter and Nest module integration tests
 
 ### Story 1.5 - Mobile App Shell and Navigation
 **Priority:** P0
-- [ ] Verify Expo app starts and renders the home screen
-- [ ] Verify tab navigation works (Home, Appointments, Notifications, Profile)
-- [ ] Verify auth flow screens are accessible
-- [ ] Wire Supabase client initialization
-- [ ] Wire auth store to Supabase session
+**Status:** UI scaffolded; production authentication wiring in progress
+- [x] Scaffold Expo screens and role-specific tabs
+- [x] Verify role-picker prototype navigation manually
+- [x] Scaffold auth flow screens
+- [x] Wire Supabase client initialization
+- [ ] Verify session-backed authentication against a configured Supabase project
 
 ### Story 1.6 - Design Tokens and Theme Integration
 **Priority:** P1
+- [x] Scaffold shared and mobile theme tokens
 - [ ] Verify `@revvy/design-tokens` exports are accessible in mobile
-- [ ] Replace hardcoded colors in mobile screens with design tokens
+- [ ] Replace remaining hardcoded colors in non-pilot prototype screens with design tokens
 - [ ] Add NativeWind/Tailwind configuration if using NativeWind
 
 ### Story 1.7 - Structured Logging
 **Priority:** P1
-- [ ] Add Pino HTTP logger to NestJS
-- [ ] Include request ID, timestamp, environment, module in every log
-- [ ] Redact sensitive fields (tokens, OTPs, auth headers)
-- [ ] Add log level configuration per environment
+- [x] Add Pino HTTP logger to NestJS
+- [x] Include request ID, timestamp, and environment in request logs
+- [x] Redact sensitive fields (tokens, OTPs, auth headers, cookies)
+- [x] Add log level configuration per environment
 
 ---
 
@@ -97,40 +102,40 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 ### Story 2.1 - Owner Signup and Authentication
 **Priority:** P0
 
-> **Note:** For product exploration, the mobile auth screens currently bypass real phone/OTP verification and navigate directly into the app. This must be re-enabled before launch.
+> **Note:** Development builds retain `/role-picker` for demos. Production builds enter the real authenticated flow.
 
-- [x] Scaffold sign-in / create-shop / verify-otp screens (verification bypassed for exploration)
-- [ ] Implement phone OTP flow in mobile app via Supabase Auth
-- [ ] Implement OTP verification screen
-- [ ] Create or link `User` record on first authentication
-- [ ] Add `PATCH /api/v1/me` for profile updates (name, phone, email)
-- [ ] Add session persistence and auto-refresh
-- [ ] Add logout/session revocation
+- [x] Scaffold sign-in / create-shop / verify-otp screens (UI only; not backend acceptance)
+- [x] Implement phone OTP flow in mobile app via Supabase Auth
+- [x] Implement OTP verification screen
+- [x] Create or link `User` record on first authenticated API request
+- [x] Add `PATCH /api/v1/me` for profile updates (name, phone, email)
+- [x] Add session persistence and auto-refresh
+- [x] Add logout/session revocation
 - [ ] Unit tests for auth flow
 
 ### Story 2.2 - Shop Creation
 **Priority:** P0
-- [ ] Implement `POST /api/v1/shops` with validation
-- [ ] Create `Shop`, owner `Membership`, and `ShopOnboarding` in one transaction
-- [ ] Set default subscription status to `TRIALING`
-- [ ] Store timezone explicitly; never infer per request
-- [ ] Prevent duplicate shop creation on retry (idempotency)
-- [ ] Return shop context to mobile app after creation
+- [x] Implement `POST /api/v1/shops` with shared-contract validation
+- [x] Create `Shop`, owner `Membership`, and `ShopOnboarding` in one transaction
+- [x] Set default subscription status to `TRIALING`
+- [x] Store timezone explicitly; never infer per request
+- [x] Prevent duplicate shop creation on retry (idempotency)
+- [x] Return shop context to mobile app after creation
 - [ ] Integration tests for shop creation transaction
 
 ### Story 2.3 - Shop Profile Management
 **Priority:** P1
-- [ ] Implement `GET /api/v1/shops/:shopId` with membership check
-- [ ] Implement `PATCH /api/v1/shops/:shopId` for profile updates
-- [ ] Implement `POST /api/v1/shops/:shopId/publish` (DRAFT -> PUBLISHED)
-- [ ] Implement `POST /api/v1/shops/:shopId/pause` (PUBLISHED -> PAUSED)
+- [x] Implement `GET /api/v1/shops/:shopId` with membership check
+- [x] Implement `PATCH /api/v1/shops/:shopId` for profile updates
+- [x] Implement `POST /api/v1/shops/:shopId/publish` (DRAFT -> PUBLISHED)
+- [x] Implement `POST /api/v1/shops/:shopId/pause` (PUBLISHED -> PAUSED)
 - [ ] Implement business hours CRUD (`GET/PATCH /api/v1/shops/:shopId/hours`)
-- [ ] Block public bookings until required setup is complete
+- [x] Block public catalog exposure until the shop and a bookable service are published
 - [ ] Mobile: shop settings screen for owner/manager
 
 ### Story 2.4 - Onboarding Checklist
 **Priority:** P1
-- [ ] Track onboarding progress in `ShopOnboarding` model
+- [x] Track shop profile and published-service progress in `ShopOnboarding`
 - [ ] Implement onboarding status API endpoint
 - [ ] Mobile: onboarding checklist UI (shop profile, add service, invite employee, subscription)
 - [ ] Mark steps complete as user performs actions
@@ -169,10 +174,10 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 
 ### Story 2.8 - Authorization Guards
 **Priority:** P0
-- [ ] Implement `ShopContextGuard` that resolves active membership from auth token + shopId
-- [ ] Implement `RolesGuard` for role-based permission checks
-- [ ] Every shop-scoped endpoint requires valid active membership
-- [ ] Suspended/revoked/expired memberships cannot access shop data
+- [x] Implement `ShopContextGuard` that resolves active membership from auth token + shopId
+- [x] Implement `RolesGuard` for role-based permission checks
+- [x] Every currently registered shop-scoped endpoint requires valid active membership
+- [x] Suspended/revoked/expired memberships cannot access registered shop endpoints
 - [ ] Customer can only access own profile, vehicles, appointments, etc.
 - [ ] Technicians see only assigned work orders (unless owner grants broader access)
 - [ ] Authorization tests for every shop-scoped module
@@ -183,13 +188,13 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 
 ### Story 3.1 - Service Catalog CRUD
 **Priority:** P0
-- [ ] Implement full CRUD for `POST/GET/PATCH /api/v1/shops/:shopId/services`
-- [ ] Implement `POST /api/v1/shops/:shopId/services/:serviceId/archive`
-- [ ] Implement `GET /api/v1/public/shops/:shopId/services` (public, active only)
-- [ ] Validate price type semantics (FIXED_PRICE, STARTING_AT, INSPECTION_REQUIRED)
-- [ ] Store monetary values as integer minor units (cents)
-- [ ] Store currency code (default USD)
-- [ ] Mobile: service list and create/edit screens for owner/manager
+- [x] Implement create/list/get/update for `/api/v1/shops/:shopId/services`
+- [x] Implement publish and archive service commands
+- [x] Implement `GET /api/v1/public/shops/:shopId/services` (published shop, active services only)
+- [x] Validate price type semantics (FIXED_PRICE, STARTING_AT, INSPECTION_REQUIRED)
+- [x] Store monetary values as integer minor units (cents)
+- [x] Store currency code (default USD)
+- [x] Replace mock data in the owner service list and create/edit screens
 
 ### Story 3.2 - Transparent Pricing Display
 **Priority:** P0
@@ -339,28 +344,25 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 - [ ] Implement `POST /api/v1/invoices/:invoiceId/send`
 - [ ] Mobile: invoice detail screen
 
-### Story 5.2 - Customer Payment Flow
+### Story 5.2 - External Payment Recording
 **Priority:** P0
-- [ ] Implement `POST /api/v1/invoices/:invoiceId/payment-session`
-- [ ] Create Stripe PaymentIntent / Connect payment
-- [ ] Return client secret to mobile app
-- [ ] Mobile: Stripe PaymentSheet integration
-- [ ] Raw card data never touches Revvy servers
-- [ ] Client-side success does NOT mark invoice paid
+- [x] Implement `POST /api/v1/invoices/:invoiceId/payments/external`
+- [x] Restrict recording to active authorized shop staff
+- [x] Require `Idempotency-Key`, integer minor-unit amount, method, and payment timestamp
+- [x] Accept optional external reference and note
+- [x] Atomically update invoice paid amount and derived status
+- [x] Test duplicate submissions and overpayment behavior
 
-### Story 5.3 - Stripe Webhook Processing
-**Priority:** P0
-- [ ] Implement `POST /api/v1/webhooks/stripe`
-- [ ] Verify webhook signature
-- [ ] Persist webhook event before processing (idempotency via `WebhookEvent`)
-- [ ] Process payment_intent events to update payment and invoice status
-- [ ] Duplicate webhook delivery does not duplicate payment
-- [ ] Enqueue receipt notification after successful payment
+### Story 5.3 - Customer In-App Payments (Post-Pilot)
+**Priority:** Deferred (depends on a later ADR-003 revision and legal/accounting approval)
+- [ ] Select and approve Stripe Connect money movement
+- [ ] Implement signed, replay-safe webhook processing
+- [ ] Add PaymentSheet without exposing raw card data to Revvy
 
-### Story 5.4 - Payment Reconciliation
+### Story 5.4 - External Payment Reconciliation
 **Priority:** P0
-- [ ] Payment status only updated by verified webhook or authoritative Stripe API response
-- [ ] Store provider payment IDs for reconciliation
+- [ ] Payment status only updated by authorized server-side commands
+- [ ] Store external references and actor IDs for reconciliation
 - [ ] Handle refunds and disputes in data model
 - [ ] Customer receives receipt notification
 - [ ] Shop sees invoice as paid
@@ -386,13 +388,13 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 **Priority:** P1
 - [ ] Implement entitlement guard that checks plan limits before feature access
 - [ ] Enforce on backend (not just client-side)
-- [ ] Starter: up to 2 employees, no estimates, no online payments
-- [ ] Growth: up to 8 employees, estimates, online payments
+- [ ] Starter: up to 2 employees and no estimates
+- [ ] Growth: up to 8 employees, estimates, and external-payment recording
 - [ ] Pro: unlimited employees, advanced analytics, custom permissions
 - [ ] Plan entitlements stored centrally (not hardcoded)
 
 ### Story 5.8 - Stripe Connect Onboarding
-**Priority:** P1 (depends on ADR-003)
+**Priority:** Deferred (post-pilot; depends on a later ADR-003 revision)
 - [ ] Implement `POST /api/v1/shops/:shopId/stripe-connect/onboarding`
 - [ ] Route shop owners through Stripe Connect account setup
 - [ ] Store Stripe account ID on shop record
@@ -413,8 +415,8 @@ Organized by delivery phase from the V1 spec. Each story maps to a user-facing o
 - [ ] Concurrent appointment submissions cannot overbook
 - [ ] Technician cannot view unassigned work orders when restricted
 - [ ] Customer cannot approve another customer's estimate
-- [ ] Client payment success doesn't mark invoice paid without webhook
-- [ ] Duplicate webhook doesn't duplicate payment
+- [ ] Client state alone cannot mark an invoice paid
+- [ ] Duplicate external-payment submission does not duplicate payment
 - [ ] Subscription downgrade doesn't delete data
 - [ ] Private media inaccessible without signed URL
 - [ ] SMS opt-out prevents non-essential SMS

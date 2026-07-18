@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.31.0
+        version: 9.39.5
       '@prisma/client':
         specifier: 5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -56,6 +59,9 @@ importers:
       '@prisma/client':
         specifier: ^5.18.0
         version: 5.22.0(prisma@5.22.0)
+      '@revvy/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@supabase/supabase-js':
         specifier: ^2.45.1
         version: 2.110.7
@@ -89,9 +95,6 @@ importers:
       twilio:
         specifier: ^5.2.3
         version: 5.13.1
-      uuid:
-        specifier: ^10.0.0
-        version: 10.0.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -117,9 +120,6 @@ importers:
       '@types/node':
         specifier: ^20.14.15
         version: 20.19.43
-      '@types/uuid':
-        specifier: ^10.0.0
-        version: 10.0.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
@@ -153,6 +153,9 @@ importers:
       '@react-navigation/native':
         specifier: ^7.0.0
         version: 7.3.11(react-native@0.81.5(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@revvy/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@supabase/supabase-js':
         specifier: ^2.45.1
         version: 2.110.7

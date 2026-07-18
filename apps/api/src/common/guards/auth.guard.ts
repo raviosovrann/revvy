@@ -1,37 +1,38 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { AuthService } from '../../modules/auth/auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(private readonly authService: AuthService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
+    const authorization = request.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid authorization header.');
+    if (
+      typeof authorization !== 'string' ||
+      !authorization.startsWith('Bearer ')
+    ) {
+      throw new UnauthorizedException({
+        code: 'AUTHORIZATION_REQUIRED',
+        message: 'A Bearer access token is required.',
+      });
     }
 
-    const token = authHeader.substring(7);
-
-    try {
-      const user = await this.validateToken(token);
-      request.user = user;
-      return true;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired token.');
-    }
-  }
-
-  private async validateToken(token: string): Promise<{ userId: string; email?: string; phone?: string }> {
-    // TODO: Implement Supabase JWT validation
-    // For now, this is a placeholder that will be completed in Phase 1
+    const token = authorization.slice('Bearer '.length).trim();
     if (!token) {
-      throw new Error('Token validation not yet implemented');
+      throw new UnauthorizedException({
+        code: 'AUTHORIZATION_REQUIRED',
+        message: 'A Bearer access token is required.',
+      });
     }
-    return { userId: 'placeholder' };
+
+    request.user = await this.authService.validateSupabaseToken(token);
+    return true;
   }
 }

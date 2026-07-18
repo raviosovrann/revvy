@@ -1,10 +1,10 @@
 # Revvy V1 Product, Architecture, and Infrastructure Specification
 
-**Document status:** Initial product and engineering specification  
+**Document status:** Pilot baseline
 **Product:** Revvy  
 **Version:** V1 / MVP  
 **Audience:** Product owner, designers, engineering subagents, QA, DevOps, security, and future contributors  
-**Last updated:** 2026-07-12  
+**Last updated:** 2026-07-18
 **Primary market:** Independent auto-service businesses in New York City, with a platform that can expand geographically  
 
 ---
@@ -17,7 +17,7 @@ Revvy V1 is **one mobile application with role-based views**, not three separate
 
 - **Owner view:** configure and operate a shop.
 - **Employee view:** execute assigned work and update job progress.
-- **Customer view:** find or open a shop, book a service, approve work, pay, and view service history.
+  - **Customer view:** open a linked shop, book a service, approve work, view invoices, and view service history.
 
 The product is mobile-first, but it is not mobile-only. The backend, API contracts, design tokens, and domain logic must support a responsive web client later without requiring a rewrite.
 
@@ -58,7 +58,7 @@ A shop is created by an owner. Employees do not create shops and do not select a
 
 ### 2.4 Customer signup must be low friction
 
-Customers need an account for saved vehicles, bookings, payments, and history, but V1 should use passwordless phone OTP or magic-link authentication. Do not require a password during initial signup.
+Customers need an account for saved vehicles, bookings, invoices, and history, but V1 should use passwordless phone OTP or magic-link authentication. Do not require a password during initial signup.
 
 ### 2.5 Transparent price semantics
 
@@ -97,7 +97,7 @@ Assume owners and employees may have limited technical experience, busy schedule
 7. Let an employee update a work order with notes and photos.
 8. Let a shop create an estimate for non-fixed work.
 9. Let a customer approve or reject an estimate.
-10. Let a shop issue an invoice and let a customer pay in the app.
+10. Let a shop issue an invoice and let authorized staff record an externally collected payment.
 11. Let all participants receive appointment, estimate, invoice, and status notifications.
 12. Let the owner start, manage, and cancel a paid subscription.
 13. Ensure every shop can only access its own business data.
@@ -110,6 +110,9 @@ Do not build these in V1 unless a product decision explicitly changes this docum
 - Separate native applications for each role.
 - Full desktop dashboard.
 - Public marketplace ranking, bidding, or lead auctions.
+- Public shop search; pilot discovery uses QR codes and deep links.
+- In-app customer payment collection or Stripe Connect onboarding.
+- Offline mutation queues.
 - AI diagnosis or AI-generated repair decisions.
 - Parts supplier integrations or inventory management.
 - Full accounting/bookkeeping software.
@@ -134,7 +137,7 @@ Do not build these in V1 unless a product decision explicitly changes this docum
 | Manager | Runs daily operations with delegated permissions | Mobile first; web later |
 | Front desk | Manages customers, appointments, estimates, and invoices | Mobile first; web later |
 | Mechanic/technician | Performs service work and records job progress | Mobile |
-| Customer | Books service, approves work, pays, and views history | Mobile |
+| Customer | Books service, approves work, views invoices/receipts, and views history | Mobile |
 | Revvy administrator | Internal support and abuse/billing operations; not a shop user | Internal tools only |
 
 ### 4.2 Initial role model
@@ -154,7 +157,8 @@ V1 uses fixed roles with a permission matrix. Avoid a custom permission builder 
 | Create estimates | Yes | Yes | Yes | Draft/request only | No |
 | Approve estimates | No | No | No | No | Own only |
 | Issue invoices | Yes | Yes | Yes | No | No |
-| Pay invoices | No | No | No | No | Own only |
+| Record external payments | Yes | Yes | Yes | No | No |
+| View receipts | Yes | Yes | Yes | No | Own only |
 | View shop financial analytics | Yes | Configurable | No | No | No |
 | Manage subscription | Yes | No | No | No | No |
 | Delete/deactivate shop | Yes, protected | No | No | No | No |
@@ -214,7 +218,7 @@ The app has a shared account layer and role-specific workspaces.
 - Estimates to approve
 - Invoices and receipts
 - Service history
-- Profile and payment methods
+- Profile
 
 ### 5.5 Shop context
 
@@ -277,7 +281,6 @@ Customers need an account, but signup must be lightweight.
 
 1. Customer scans a shop QR code or opens a shop deep link.
 2. Customer receives a booking link by text.
-3. Customer searches by shop name, neighborhood, or ZIP code if public discovery is enabled.
 
 #### Flow
 
@@ -291,7 +294,7 @@ Customers need an account, but signup must be lightweight.
 
 #### V1 discovery constraint
 
-Public discovery should be basic: name, address, hours, services, and availability. Do not implement ranking, reviews-based ordering, paid placement, or marketplace bidding in V1.
+Pilot discovery uses shop-issued QR codes and deep links. A linked public profile may show name, address, hours, services, and availability. Search, ranking, reviews-based ordering, paid placement, and marketplace bidding are deferred.
 
 ### 6.4 Service catalog and transparent pricing
 
@@ -407,19 +410,18 @@ Every status change records actor, timestamp, previous status, new status, and o
 
 V1 should not support partial line-item approval unless product scope expands. Whole-estimate approval keeps the state model simpler.
 
-### 6.8 Invoice and customer payment
+### 6.8 Invoice and external-payment recording
 
 1. Staff creates an invoice from completed work-order items.
 2. API snapshots line items and computes totals.
 3. Customer receives an invoice notification.
-4. Customer opens the invoice and selects `Pay`.
-5. App uses Stripe’s mobile payment UI; raw card data never touches Revvy servers.
-6. Stripe sends a webhook to Revvy.
-7. Revvy verifies the webhook signature and idempotently records payment status.
-8. Customer receives a receipt.
-9. Shop sees the invoice as paid.
+4. The shop collects payment outside Revvy, such as cash, check, bank transfer, or an existing card terminal.
+5. Authorized shop staff records the amount, method, payment timestamp, and optional reference/note.
+6. The API idempotently creates the payment and updates the invoice balance in one transaction.
+7. Customer receives an in-app receipt notification.
+8. Shop sees the invoice as partially or fully paid.
 
-Payment UI must not mark an invoice paid based only on client success. The verified webhook or authoritative Stripe API response is required.
+The client cannot mark an invoice paid directly. The API derives invoice status from persisted, successful payment records. In-app customer payments and Stripe Connect are deferred until a separate money-movement decision is approved.
 
 ### 6.9 Subscription billing
 
@@ -516,13 +518,13 @@ Every notification needs an idempotency key and delivery status.
 ### 7.8 Billing and payments
 
 - Shop subscriptions: Stripe Billing.
-- Customer invoice payments: Stripe PaymentSheet and Stripe Connect where funds are paid to shops through the platform.
+- Customer invoice payments: externally collected for the pilot and recorded by authorized shop staff.
 - Refunds and disputes must be represented in the data model.
 - Revvy must never store PAN/card numbers or CVV.
 - Payment provider IDs are stored for reconciliation.
-- Billing webhook processing is idempotent and auditable.
+- External-payment recording is idempotent and auditable.
 
-**Business/legal dependency:** Before real-money launch, confirm Stripe Connect account type, platform fee handling, merchant-of-record responsibilities, sales tax treatment, refund policy, dispute ownership, and New York requirements with qualified legal/accounting professionals.
+**Business/legal dependency:** Before any later in-app customer-payment launch, confirm Stripe Connect account type, platform fee handling, merchant-of-record responsibilities, sales tax treatment, refund policy, dispute ownership, and New York requirements with qualified legal/accounting professionals.
 
 ---
 
@@ -564,11 +566,11 @@ Do not duplicate domain rules between screens. The API remains authoritative.
 | --- | --- | --- |
 | Mobile build/distribution | Expo EAS | iOS/Android builds and submission |
 | API hosting | Railway, Render, Fly.io, or equivalent managed container host | Run NestJS API and worker |
-| Database | Managed PostgreSQL | Durable relational data |
-| Authentication | Supabase Auth or Clerk; choose one before implementation | OTP, sessions, identity |
-| Object storage | Supabase Storage, S3, or Cloudflare R2 | Inspection photos and documents |
+| Database | Supabase Postgres | Durable relational data |
+| Authentication | Supabase Auth | OTP, sessions, identity |
+| Object storage | Supabase Storage (private buckets) | Inspection photos and documents |
 | Subscription billing | Stripe Billing | Shop SaaS subscriptions |
-| Customer payments | Stripe PaymentSheet + Connect | Invoice payments to shops |
+| Customer payments | External collection + staff recording | Pilot invoice reconciliation |
 | SMS | Twilio | OTP fallback, invitations, reminders, transactional messages |
 | Email | Resend or Postmark | Receipts and transactional fallback |
 | Push | Expo Notifications/APNs/FCM | Mobile notifications |
@@ -580,22 +582,14 @@ Do not duplicate domain rules between screens. The API remains authoritative.
 
 ### 8.4 Authentication decision
 
-For the smallest implementation surface, choose one provider before coding:
-
-#### Option A: Supabase Auth
+Supabase Auth is accepted for the pilot (ADR-001):
 
 - Strong fit if using Supabase Postgres and Storage.
 - Phone OTP and email auth are available.
 - Backend validates Supabase JWTs.
 - Keep shop authorization in Revvy’s own `Membership` table.
 
-#### Option B: Clerk
-
-- Strong fit if organization invitations and polished auth UI are the priority.
-- Backend validates Clerk JWTs.
-- Keep business domain data and effective authorization in Revvy’s database.
-
-This specification does not permit mixing both providers in V1. The implementation lead must make one decision in the architecture decision record before scaffolding.
+Clerk was considered but is not part of the pilot stack. Do not mix identity providers.
 
 ---
 
@@ -613,7 +607,7 @@ flowchart TB
     subgraph Platform[Revvy platform]
         API[NestJS REST API\nModular monolith]
         Worker[Background Worker\nNotifications + reconciliation]
-        Auth[Auth Provider\nSupabase Auth or Clerk]
+        Auth[Auth Provider\nSupabase Auth]
     end
 
     subgraph Data[Data layer]
@@ -623,7 +617,7 @@ flowchart TB
     end
 
     subgraph External[External providers]
-        Stripe[Stripe Billing + Connect]
+        Stripe[Stripe Billing for shop subscriptions]
         Twilio[Twilio SMS]
         Email[Transactional Email]
         Push[Expo Push / APNs / FCM]
@@ -667,7 +661,7 @@ flowchart LR
     WorkOrders[Work Orders + Inspections]
     Estimates[Estimates + Approvals]
     Invoices[Invoices + Line Items]
-    Payments[Payments + Stripe]
+    Payments[Invoices + external payments]
     Notifications[Notifications]
     Subscriptions[Subscriptions + Plans]
     Files[Files + Media]
@@ -1014,7 +1008,7 @@ POST   /api/v1/estimates/:estimateId/reject
 POST   /api/v1/work-orders/:workOrderId/invoices
 GET    /api/v1/invoices/:invoiceId
 POST   /api/v1/invoices/:invoiceId/send
-POST   /api/v1/invoices/:invoiceId/payment-session
+POST   /api/v1/invoices/:invoiceId/payments/external
 ```
 
 #### Payments, subscriptions, and webhooks
@@ -1049,30 +1043,22 @@ For `GET /api/v1/shops/:shopId/work-orders`:
 
 ## 12. External integrations and event flows
 
-### 12.1 Stripe customer invoice payment
+### 12.1 External customer payment recording
 
 ```mermaid
 sequenceDiagram
-    actor Customer
+    actor Staff as Authorized shop staff
     participant App as Revvy Mobile App
     participant API as Revvy API
-    participant Stripe as Stripe
     participant DB as PostgreSQL
     participant Worker as Job Worker
 
-    Customer->>App: Open invoice
-    App->>API: Request payment session
-    API->>DB: Verify invoice, customer, amount, status
-    API->>Stripe: Create PaymentIntent / Connect payment
-    Stripe-->>API: Client secret + provider IDs
-    API-->>App: Client secret
-    App->>Stripe: Confirm payment with Stripe UI
-    Stripe-->>App: Processing/result
-    Stripe->>API: payment_intent webhook
-    API->>API: Verify signature and event idempotency
-    API->>DB: Record payment and update invoice
-    API->>Worker: Enqueue receipt notification
-    Worker->>Customer: Send push/SMS/email receipt
+    Staff->>App: Enter externally collected payment
+    App->>API: Record amount/method/time + Idempotency-Key
+    API->>DB: Verify active staff membership and invoice shop
+    API->>DB: Atomically create payment and update invoice totals/status
+    API-->>App: Payment and authoritative invoice balance
+    API->>Worker: Enqueue in-app receipt notification
 ```
 
 ### 12.2 Appointment reminder flow
@@ -1301,7 +1287,7 @@ V1 handles identity, location, vehicle information, invoices, payment metadata, 
 
 ### 14.3 Payment boundary
 
-Revvy must not store card numbers, security codes, or magnetic stripe data. Use Stripe-hosted/mobile components and store only provider IDs, statuses, amounts, currency, and reconciliation metadata.
+Revvy must not store card numbers, security codes, or magnetic stripe data. The pilot records only externally collected payment method labels, references, statuses, amounts, currency, timestamps, and audit metadata. Future subscription billing must use Stripe-hosted components.
 
 ### 14.4 Threat model priorities
 
@@ -1347,8 +1333,8 @@ Track:
 - Notification delivery success/failure
 - Appointment booking conflict rate
 - Estimate approval rate
-- Invoice payment success rate
-- Stripe webhook lag
+- External-payment recording success rate
+- Stripe subscription webhook lag
 - SMS usage and failure rate
 - Crash-free sessions
 - Active shops and active customers
@@ -1392,7 +1378,7 @@ Create runbooks for:
 | Component | Mobile screens/components | Booking form, estimate approval, role navigation |
 | API integration | Module + database | Tenant filtering, invitation acceptance, booking transaction |
 | Contract | API schemas | Mobile client payloads and error envelopes |
-| End-to-end | Critical workflows | Owner setup, employee join, customer booking, payment webhook |
+| End-to-end | Critical workflows | Owner setup, employee join, customer booking, external payment retry |
 | Security | Abuse and authorization | Cross-shop access, expired token, role escalation |
 | Smoke | Staging health | Auth, shop load, service list, appointment read |
 
@@ -1408,8 +1394,8 @@ Create runbooks for:
 8. Concurrent appointment submissions cannot overbook the configured capacity.
 9. Technician cannot view unrelated unassigned work orders when restricted.
 10. Customer cannot approve an estimate belonging to another customer/shop.
-11. Client-side “payment success” does not mark an invoice paid without authoritative provider confirmation.
-12. Duplicate Stripe webhook delivery does not duplicate a payment or receipt.
+11. Client-side state does not mark an invoice paid without an authorized server-side payment record.
+12. Duplicate external-payment submission does not duplicate a payment or receipt.
 13. Subscription downgrade does not delete data.
 14. Private media is inaccessible without an authorized signed URL.
 15. SMS opt-out prevents non-essential SMS delivery.
@@ -1480,7 +1466,7 @@ Never include payment card details, OTPs, invitation tokens, or unnecessary pers
 - Customer booking completion rate.
 - Appointment no-show/cancellation rate.
 - Estimate approval rate.
-- Invoice payment success rate.
+- External-payment recording success rate.
 - Monthly active shops.
 - Retention at 30 and 90 days.
 - Subscription conversion after trial.
@@ -1495,7 +1481,7 @@ Never include payment card details, OTPs, invitation tokens, or unnecessary pers
 | Plan | Monthly price | Intended customer | Core limits/features |
 | --- | ---: | --- | --- |
 | Starter | $25 | Solo operator or very small shop | One shop, owner, up to 2 employees, services, appointments, basic records, limited notifications |
-| Growth | $50 | Small independent shop | Starter plus up to 8 employees, estimates, online payments, photos, reminders, service history, basic reports |
+| Growth | $50 | Small independent shop | Starter plus up to 8 employees, estimates, payment recording, photos, reminders, service history, basic reports |
 | Pro | $100 | Busy shop or future multi-location operator | Growth plus advanced analytics, custom permissions, automation, review/loyalty tools, priority support |
 
 Limits are configuration, not hard-coded business logic. Store plan entitlements centrally so plan packaging can change without rewriting feature modules.
@@ -1508,7 +1494,7 @@ Primary:
 
 Potential later revenue:
 
-- Clearly disclosed platform fee on customer payments.
+- Clearly disclosed platform fee on customer payments, only after a later Connect decision.
 - SMS overage or communications add-on.
 - Premium automation, marketing, reporting, inventory, accounting, or fleet modules.
 - Additional locations.
@@ -1551,7 +1537,7 @@ The sequence below is designed for parallel subagents while preserving dependenc
 #### Phase 0 outputs
 
 - Final auth provider decision.
-- Final payment/Connect flow decision.
+- Accepted external-payment pilot decision; Stripe Connect deferred.
 - User journey wireframes.
 - Service/pricing rules.
 - Legal/privacy/payment responsibility checklist.
@@ -1609,13 +1595,13 @@ The sequence below is designed for parallel subagents while preserving dependenc
 - Customer approval/rejection.
 - Notifications.
 
-### Phase 5: invoices, payments, and subscriptions
+### Phase 5: invoices, external payments, and subscriptions
 
 #### Phase 5 outputs
 
 - Invoice generation.
-- Customer payment flow.
-- Stripe webhooks and reconciliation.
+- External-payment recording and reconciliation.
+- Duplicate-payment prevention.
 - Shop subscription checkout.
 - Plan entitlements.
 - Billing failure/grace behavior.
@@ -1698,9 +1684,9 @@ The project owner plans to delegate work to specialized subagents. Each workstre
 
 ### Workstream F: payments and billing
 
-**Skillset:** Stripe Billing, Stripe Connect, payment webhooks, financial workflows.  
-**Deliverables:** subscription flow, invoice-payment flow, Connect onboarding decision, webhook state machine, refunds/disputes model, reconciliation runbook.  
-**Dependencies:** invoice domain model and legal/accounting review.
+**Skillset:** invoice accounting, idempotency, Stripe Billing, and financial workflows.
+**Deliverables:** external-payment recording and reconciliation for the pilot; shop subscription billing later. Stripe Connect customer payments remain a post-pilot decision.
+**Dependencies:** invoice domain model; legal/accounting review before any customer money movement.
 
 ### Workstream G: infrastructure and DevOps
 
@@ -1725,37 +1711,37 @@ The project owner plans to delegate work to specialized subagents. Each workstre
 
 ---
 
-## 21. Architecture decision records required before implementation
+## 21. Architecture decision register
 
-Create an ADR for each item below.
+The pilot decisions below are accepted. Update an ADR before changing its boundary.
 
 ### ADR-001: Authentication provider
 
-Choose Supabase Auth or Clerk. Record phone OTP support, cost, organization/invitation capabilities, JWT validation, account deletion, and migration strategy.
+Supabase Auth is accepted. Keep ADR-001 current with phone OTP support, JWT validation, account deletion, and migration implications.
 
 ### ADR-002: Database ownership
 
-Choose whether PostgreSQL is hosted directly by Supabase or another managed provider. Record Prisma compatibility, connection pooling, backups, migrations, and row-level-security stance.
+Supabase Postgres is accepted. ADR-002 records Prisma, pooling, backup, migration, and authorization boundaries.
 
 ### ADR-003: Payment money movement
 
-Record whether V1 uses Stripe Connect destination charges, separate direct shop accounts, or postpones customer in-app payments. Include legal/accounting review requirements.
+External customer-payment collection is accepted for the pilot. ADR-003 defers Stripe Connect and records legal/accounting dependencies.
 
 ### ADR-004: Notification policy
 
-Record which notifications use push, SMS, email, or fallback logic; consent and opt-out behavior; and monthly message budget by plan.
+In-app and push are primary; transactional SMS is narrow. ADR-004 records consent and delivery requirements.
 
 ### ADR-005: Public shop discovery
 
-Choose whether V1 supports only deep links/QR codes or also basic search. Record privacy, spam, verification, and ranking implications.
+QR codes and deep links only are accepted for the pilot. ADR-005 defers public search.
 
 ### ADR-006: Offline behavior
 
-Record which screens support read-only cache, draft updates, retry queues, or no offline operation. Do not implement unsafe offline financial mutations without reconciliation design.
+Online-only mutations are accepted for the pilot. ADR-006 permits clearly marked read caches but no mutation queues.
 
 ### ADR-007: Media storage and processing
 
-Record storage provider, private/public policy, signed URL lifetime, file limits, image resizing, and deletion behavior.
+Supabase Storage with private buckets is accepted. ADR-007 records signed URL, upload, and deletion requirements.
 
 ---
 
@@ -1769,7 +1755,7 @@ Record storage provider, private/public policy, signed URL lifetime, file limits
 - [ ] Fixed price is clear and complete.
 - [ ] Inspection-required price explains uncertainty.
 - [ ] Additional work requires approval.
-- [ ] Customer can view and pay an invoice.
+- [ ] Customer can view an invoice and an externally collected payment receipt.
 - [ ] Owner can see appointment, work-order, and payment outcomes.
 
 ### Engineering
@@ -1804,10 +1790,10 @@ Record storage provider, private/public policy, signed URL lifetime, file limits
 
 ## 23. Open questions that must be answered before build lock
 
-1. Which auth provider is selected: Supabase Auth or Clerk?
-2. Is public shop search required for the pilot, or are QR/deep links sufficient?
-3. Will customer payments launch in V1, or will V1 record external/cash payments first?
-4. If payments launch, what Stripe Connect account and fee model is approved?
+1. Which production SMS provider and abuse limits will back Supabase phone OTP?
+2. What verification and ranking evidence would justify public search after the QR/deep-link pilot?
+3. What pilot evidence would justify adding in-app customer payments?
+4. Before that later launch, what Stripe Connect account and fee model is approved?
 5. Are appointments automatically confirmed or manually approved by each shop?
 6. Does a shop need bays, technicians, or simple capacity limits in the first pilot?
 7. Which service categories and fixed-price examples will be used in NYC pilot shops?
@@ -1836,19 +1822,19 @@ Revvy V1 is complete when a small auto-service business can:
 8. Send an estimate for uncertain work.
 9. Obtain explicit customer approval.
 10. Issue an invoice.
-11. Receive a verified customer payment.
+11. Idempotently record and reconcile an externally collected customer payment.
 12. Keep a trustworthy digital history of the interaction.
 
 Customers can use the same app to:
 
 1. Verify their phone number.
 2. Add a vehicle.
-3. Find or open a shop.
+3. Open a shop from its QR code or deep link.
 4. See understandable pricing.
 5. Book a service.
 6. Receive updates.
 7. Approve additional work.
-8. Pay and receive a receipt.
+8. View an externally paid invoice and receive a receipt.
 9. Return later for service history and repeat booking.
 
-The first release should optimize for **trust, low friction, secure shop separation, and a complete appointment-to-payment loop**. Everything else is secondary until real NYC service providers validate the workflow.
+The first release should optimize for **trust, low friction, secure shop separation, and a complete appointment-to-external-payment-record loop**. Everything else is secondary until real NYC service providers validate the workflow.

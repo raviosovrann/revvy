@@ -13,8 +13,4 @@ export class InvoicesService {
   async send(invoiceId: string) {
     return { id: invoiceId, status: 'OPEN' };
   }
-
-  async createPaymentSession(invoiceId: string) {
-    return { invoiceId, clientSecret: null };
-  }
 }

@@ -1,20 +1,39 @@
-import { Controller, Post, Body, Headers } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  RecordExternalPaymentRequest,
+  RecordExternalPaymentSchema,
+} from '@revvy/contracts';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { AuthGuard } from '../../common/guards/auth.guard';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { AuthenticatedUser } from '../../common/types/authenticated-user';
 import { PaymentsService } from './payments.service';
 
-@Controller('webhooks')
+@Controller('invoices/:invoiceId/payments')
+@UseGuards(AuthGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post('stripe')
-  async handleStripeWebhook(
-    @Body() body: Record<string, unknown>,
-    @Headers('stripe-signature') signature: string,
+  @Post('external')
+  recordExternalPayment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('invoiceId') invoiceId: string,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body(new ZodValidationPipe(RecordExternalPaymentSchema))
+    body: RecordExternalPaymentRequest,
   ) {
-    return this.paymentsService.handleStripeWebhook(body, signature);
-  }
-
-  @Post('twilio')
-  async handleTwilioWebhook(@Body() body: Record<string, unknown>) {
-    return this.paymentsService.handleTwilioWebhook(body);
+    return this.paymentsService.recordExternal(
+      user.userId,
+      invoiceId,
+      idempotencyKey,
+      body,
+    );
   }
 }

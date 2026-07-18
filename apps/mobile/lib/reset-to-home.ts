@@ -1,8 +1,12 @@
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
 export function useResetToHome() {
-  const router = useRouter();
+  const navigation = useNavigation<any>();
   return () => {
-    router.replace('/');
+    // Reset the root navigation container to its initial route (the landing page).
+    navigation.resetRoot({
+      index: 0,
+      routes: [{ name: 'index' }],
+    });
   };
 }

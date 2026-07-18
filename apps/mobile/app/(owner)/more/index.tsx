@@ -13,11 +13,11 @@ export default function OwnerMoreScreen() {
   const resetToHome = useResetToHome();
 
   const routes: Record<string, string> = {
-    o_team: '/(owner)/team',
-    o_invoices: '/(owner)/invoices',
-    o_subscription: '/(owner)/subscription',
-    o_settings: '/(owner)/settings',
-    o_onboarding: '/(owner)/onboarding',
+    o_team: '/more/team',
+    o_invoices: '/more/invoices',
+    o_subscription: '/more/subscription',
+    o_settings: '/more/settings',
+    o_onboarding: '/more/onboarding',
   };
 
   return (

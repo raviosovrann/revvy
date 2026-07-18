@@ -24,7 +24,7 @@ export default function OwnerServicesScreen() {
               style={styles.serviceRow}
               onPress={() =>
                 router.push({
-                  pathname: '/(owner)/service-edit',
+                  pathname: '/more/service-edit',
                   params: { serviceId: service.id },
                 })
               }
@@ -46,7 +46,7 @@ export default function OwnerServicesScreen() {
       <View style={styles.footer}>
         <Button
           title="+ New service"
-          onPress={() => router.push('/(owner)/service-edit')}
+          onPress={() => router.push('/more/service-edit')}
           style={styles.newButton}
         />
       </View>

@@ -45,7 +45,7 @@ export default function OwnerOverviewScreen() {
       {!onboardComplete && (
         <TouchableOpacity
           style={styles.onboardCard}
-          onPress={() => router.push('/(owner)/onboarding')}
+          onPress={() => router.push('/more/onboarding')}
           activeOpacity={0.8}
         >
           <View>

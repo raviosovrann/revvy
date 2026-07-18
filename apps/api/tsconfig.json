@@ -10,7 +10,9 @@
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]

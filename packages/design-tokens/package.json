@@ -10,6 +10,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "devDependencies": {
+    "@revvy/config": "workspace:*",
     "typescript": "^5.5.4"
   }
 }

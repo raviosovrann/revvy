@@ -8,7 +8,7 @@
     "dev:web": "expo start --web",
     "build": "tsc --noEmit",
     "build:eas": "expo export",
-    "lint": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "android": "expo run:android",

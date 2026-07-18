@@ -21,7 +21,7 @@ Revvy gives auto-service shops one place to manage customers, vehicles, appointm
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js >= 22
 - pnpm >= 9
 - PostgreSQL (local or managed)
 

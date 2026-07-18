@@ -1,6 +1,6 @@
 # ADR-007: Media Storage and Processing
 
-**Status:** Proposed  
+**Status:** Accepted
 **Date:** 2026-07-18
 
 ## Context
@@ -9,11 +9,12 @@ Inspection photos and documents need secure storage with controlled access.
 
 ## Decision
 
-Pending. Options under evaluation:
+Use **Supabase Storage** with private buckets for pilot inspection photos and documents. The API authorizes access and issues signed URLs with a 15-minute lifetime. Uploads must use server-issued paths scoped by shop and work order.
 
-- **Supabase Storage:** Natural fit if using Supabase ecosystem
-- **Cloudflare R2:** No egress fees; S3-compatible API
-- **AWS S3:** Most mature; higher cost
+## Alternatives Considered
+
+- **Cloudflare R2:** Attractive egress profile, but adds another provider during the pilot.
+- **AWS S3:** Mature and portable, but operationally broader than needed for the selected Supabase stack.
 
 ## Requirements
 
@@ -27,3 +28,4 @@ Pending. Options under evaluation:
 - Signed URL lifetime must be defined (recommend 15 minutes)
 - Upload limits must be enforced server-side
 - Image processing adds latency; consider async resizing
+- Deletion follows domain retention rules; clients never delete storage objects directly

@@ -1,6 +1,6 @@
 # ADR-005: Public Shop Discovery
 
-**Status:** Proposed  
+**Status:** Accepted
 **Date:** 2026-07-18
 
 ## Context
@@ -9,7 +9,7 @@ V1 must decide whether customers find shops via deep links/QR codes only, or als
 
 ## Decision
 
-Pending. Initial recommendation: deep links and QR codes only for V1 pilot. Basic search can be added post-pilot if validated.
+The first pilot supports shop discovery through verified **QR codes and deep links only**. Public marketplace search is deferred until pilot evidence justifies verification, spam controls, ranking, and privacy work.
 
 ## Consequences
 

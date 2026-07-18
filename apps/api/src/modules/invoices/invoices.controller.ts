@@ -8,7 +8,10 @@ export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post('work-orders/:workOrderId/invoices')
-  create(@Param('workOrderId') workOrderId: string, @Body() body: Record<string, unknown>) {
+  create(
+    @Param('workOrderId') workOrderId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
     return this.invoicesService.create(workOrderId, body);
   }
 
@@ -20,10 +23,5 @@ export class InvoicesController {
   @Post('invoices/:invoiceId/send')
   send(@Param('invoiceId') invoiceId: string) {
     return this.invoicesService.send(invoiceId);
-  }
-
-  @Post('invoices/:invoiceId/payment-session')
-  createPaymentSession(@Param('invoiceId') invoiceId: string) {
-    return this.invoicesService.createPaymentSession(invoiceId);
   }
 }

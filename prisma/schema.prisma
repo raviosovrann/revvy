@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_DATABASE_URL")
 }
 
@@ -22,13 +22,13 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  memberships      Membership[]
-  invitations      Invitation[]
-  customer         Customer?
+  memberships          Membership[]
+  invitations          Invitation[]
+  customer             Customer?
   workOrderAssignments WorkOrderAssignment[]
-  auditEvents      AuditEvent[]
-  deviceTokens     DeviceToken[]
-  notifications    Notification[]
+  auditEvents          AuditEvent[]
+  deviceTokens         DeviceToken[]
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -37,7 +37,7 @@ model DeviceToken {
   id        String   @id @default(uuid())
   userId    String
   token     String   @unique
-  platform  String   // IOS | ANDROID
+  platform  String // IOS | ANDROID
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -50,29 +50,30 @@ model DeviceToken {
 // =============================================================================
 
 model Shop {
-  id              String   @id @default(uuid())
-  name            String
-  phone           String?
-  address         String?
-  timezone        String   @default("America/New_York")
-  status          String   @default("DRAFT") // DRAFT | PUBLISHED | PAUSED | ARCHIVED
-  description     String?
-  logoUrl         String?
-  stripeAccountId String?  @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  creationIdempotencyKey String?  @unique
+  name                   String
+  phone                  String?
+  address                String?
+  timezone               String   @default("America/New_York")
+  status                 String   @default("DRAFT") // DRAFT | PUBLISHED | PAUSED | ARCHIVED
+  description            String?
+  logoUrl                String?
+  stripeAccountId        String?  @unique
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  memberships   Membership[]
-  invitations   Invitation[]
-  services      Service[]
-  businessHours BusinessHour[]
+  memberships     Membership[]
+  invitations     Invitation[]
+  services        Service[]
+  businessHours   BusinessHour[]
   holidayClosures HolidayClosure[]
-  customerShops CustomerShop[]
-  appointments  Appointment[]
-  workOrders    WorkOrder[]
-  subscription  ShopSubscription?
-  auditEvents   AuditEvent[]
-  onboarding    ShopOnboarding?
+  customerShops   CustomerShop[]
+  appointments    Appointment[]
+  workOrders      WorkOrder[]
+  subscription    ShopSubscription?
+  auditEvents     AuditEvent[]
+  onboarding      ShopOnboarding?
 
   @@map("shops")
 }
@@ -81,7 +82,7 @@ model Membership {
   id        String   @id @default(uuid())
   userId    String
   shopId    String
-  role      String   // OWNER | MANAGER | FRONT_DESK | TECHNICIAN
+  role      String // OWNER | MANAGER | FRONT_DESK | TECHNICIAN
   status    String   @default("ACTIVE") // INVITED | ACTIVE | SUSPENDED | DEACTIVATED
   joinedAt  DateTime @default(now())
   createdAt DateTime @default(now())
@@ -97,18 +98,18 @@ model Membership {
 }
 
 model Invitation {
-  id           String    @id @default(uuid())
+  id           String   @id @default(uuid())
   shopId       String
   invitedById  String?
   name         String
-  contactType  String    // PHONE | EMAIL
+  contactType  String // PHONE | EMAIL
   contactValue String
-  role         String    // MANAGER | FRONT_DESK | TECHNICIAN
-  tokenHash    String    @unique
-  status       String    @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
+  role         String // MANAGER | FRONT_DESK | TECHNICIAN
+  tokenHash    String   @unique
+  status       String   @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
   expiresAt    DateTime
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   shop      Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
   invitedBy User? @relation(fields: [invitedById], references: [id])
@@ -138,9 +139,9 @@ model ShopOnboarding {
 model BusinessHour {
   id        String   @id @default(uuid())
   shopId    String
-  dayOfWeek Int      // 0=Sunday, 6=Saturday
-  opensAt   String   // HH:mm format
-  closesAt  String   // HH:mm format
+  dayOfWeek Int // 0=Sunday, 6=Saturday
+  opensAt   String // HH:mm format
+  closesAt  String // HH:mm format
   isClosed  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -228,10 +229,10 @@ model Service {
   name               String
   description        String?
   category           String?
-  priceType          String   // FIXED_PRICE | STARTING_AT | INSPECTION_REQUIRED
-  priceMinor         Int?     // Price in cents for FIXED_PRICE
-  startingPriceMinor Int?     // Starting price for STARTING_AT
-  inspectionFeeMinor Int?     // Inspection fee for INSPECTION_REQUIRED
+  priceType          String // FIXED_PRICE | STARTING_AT | INSPECTION_REQUIRED
+  priceMinor         Int? // Price in cents for FIXED_PRICE
+  startingPriceMinor Int? // Starting price for STARTING_AT
+  inspectionFeeMinor Int? // Inspection fee for INSPECTION_REQUIRED
   durationMinutes    Int
   currency           String   @default("USD")
   taxBehavior        String   @default("EXCLUSIVE") // EXCLUSIVE | INCLUSIVE
@@ -240,7 +241,7 @@ model Service {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  shop              Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
   appointmentServices AppointmentService[]
 
   @@map("services")
@@ -251,27 +252,27 @@ model Service {
 // =============================================================================
 
 model Appointment {
-  id         String   @id @default(uuid())
-  shopId     String
-  customerId String
-  vehicleId  String
-  startsAt   DateTime
-  endsAt     DateTime
-  status     String   @default("REQUESTED") // REQUESTED | CONFIRMED | RESCHEDULED | CHECKED_IN | IN_PROGRESS | COMPLETED | CANCELLED | NO_SHOW
-  timezone   String
-  cancelReason String?
-  notes      String?
-  idempotencyKey String? @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  createdBy  String?
+  id             String   @id @default(uuid())
+  shopId         String
+  customerId     String
+  vehicleId      String
+  startsAt       DateTime
+  endsAt         DateTime
+  status         String   @default("REQUESTED") // REQUESTED | CONFIRMED | RESCHEDULED | CHECKED_IN | IN_PROGRESS | COMPLETED | CANCELLED | NO_SHOW
+  timezone       String
+  cancelReason   String?
+  notes          String?
+  idempotencyKey String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
 
   shop     Shop     @relation(fields: [shopId], references: [id])
   customer Customer @relation(fields: [customerId], references: [id])
   vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
 
-  services    AppointmentService[]
-  workOrder   WorkOrder?
+  services      AppointmentService[]
+  workOrder     WorkOrder?
   statusHistory AppointmentStatusHistory[]
 
   @@index([shopId, startsAt])
@@ -284,9 +285,9 @@ model AppointmentService {
   appointmentId String
   serviceId     String
 
-  serviceNameSnapshot  String
-  priceTypeSnapshot    String
-  priceMinorSnapshot   Int?
+  serviceNameSnapshot   String
+  priceTypeSnapshot     String
+  priceMinorSnapshot    Int?
   startingPriceSnapshot Int?
   inspectionFeeSnapshot Int?
 
@@ -297,13 +298,13 @@ model AppointmentService {
 }
 
 model AppointmentStatusHistory {
-  id            String   @id @default(uuid())
-  appointmentId String
+  id             String   @id @default(uuid())
+  appointmentId  String
   previousStatus String?
-  newStatus     String
-  actorId       String?
-  note          String?
-  createdAt     DateTime @default(now())
+  newStatus      String
+  actorId        String?
+  note           String?
+  createdAt      DateTime @default(now())
 
   appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
@@ -327,11 +328,11 @@ model WorkOrder {
   shop        Shop         @relation(fields: [shopId], references: [id])
   appointment Appointment? @relation(fields: [appointmentId], references: [id])
 
-  assignments  WorkOrderAssignment[]
-  notes_       WorkOrderNote[]   @relation("WorkOrderNotes")
-  media        MediaAsset[]
-  estimates    Estimate[]
-  invoice      Invoice?
+  assignments   WorkOrderAssignment[]
+  notes_        WorkOrderNote[]          @relation("WorkOrderNotes")
+  media         MediaAsset[]
+  estimates     Estimate[]
+  invoice       Invoice?
   statusHistory WorkOrderStatusHistory[]
 
   @@index([shopId, status])
@@ -339,12 +340,12 @@ model WorkOrder {
 }
 
 model WorkOrderAssignment {
-  id          String   @id @default(uuid())
-  workOrderId String
-  userId      String
+  id           String   @id @default(uuid())
+  workOrderId  String
+  userId       String
   membershipId String?
-  isPrimary   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
 
   workOrder  WorkOrder   @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
   user       User        @relation(fields: [userId], references: [id])
@@ -400,36 +401,36 @@ model MediaAsset {
 // =============================================================================
 
 model Estimate {
-  id           String   @id @default(uuid())
-  workOrderId  String
-  status       String   @default("DRAFT") // DRAFT | SENT | APPROVED | REJECTED | EXPIRED | CANCELLED
-  subtotalMinor Int     @default(0)
-  taxMinor     Int      @default(0)
-  discountMinor Int     @default(0)
-  totalMinor   Int      @default(0)
-  currency     String   @default("USD")
-  notes        String?
-  sentAt       DateTime?
-  expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(uuid())
+  workOrderId   String
+  status        String    @default("DRAFT") // DRAFT | SENT | APPROVED | REJECTED | EXPIRED | CANCELLED
+  subtotalMinor Int       @default(0)
+  taxMinor      Int       @default(0)
+  discountMinor Int       @default(0)
+  totalMinor    Int       @default(0)
+  currency      String    @default("USD")
+  notes         String?
+  sentAt        DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  workOrder   WorkOrder          @relation(fields: [workOrderId], references: [id])
-  lineItems   EstimateLineItem[]
-  approvals   EstimateApproval[]
+  workOrder WorkOrder          @relation(fields: [workOrderId], references: [id])
+  lineItems EstimateLineItem[]
+  approvals EstimateApproval[]
 
   @@map("estimates")
 }
 
 model EstimateLineItem {
-  id           String @id @default(uuid())
-  estimateId   String
-  description  String
-  quantity     Int    @default(1)
-  unitPriceMinor Int
-  totalMinor   Int
+  id                  String   @id @default(uuid())
+  estimateId          String
+  description         String
+  quantity            Int      @default(1)
+  unitPriceMinor      Int
+  totalMinor          Int
   serviceNameSnapshot String?
-  createdAt    DateTime @default(now())
+  createdAt           DateTime @default(now())
 
   estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
 
@@ -440,7 +441,7 @@ model EstimateApproval {
   id         String   @id @default(uuid())
   estimateId String
   actorId    String
-  decision   String   // APPROVED | REJECTED
+  decision   String // APPROVED | REJECTED
   note       String?
   decidedAt  DateTime @default(now())
 
@@ -454,25 +455,25 @@ model EstimateApproval {
 // =============================================================================
 
 model Invoice {
-  id            String   @id @default(uuid())
-  workOrderId   String?  @unique
+  id            String    @id @default(uuid())
+  workOrderId   String?   @unique
   shopId        String
   customerId    String
-  status        String   @default("DRAFT") // DRAFT | OPEN | PARTIALLY_PAID | PAID | VOID | UNCOLLECTIBLE
-  subtotalMinor Int      @default(0)
-  taxMinor      Int      @default(0)
-  discountMinor Int      @default(0)
-  totalMinor    Int      @default(0)
-  paidMinor     Int      @default(0)
-  currency      String   @default("USD")
+  status        String    @default("DRAFT") // DRAFT | OPEN | PARTIALLY_PAID | PAID | VOID | UNCOLLECTIBLE
+  subtotalMinor Int       @default(0)
+  taxMinor      Int       @default(0)
+  discountMinor Int       @default(0)
+  totalMinor    Int       @default(0)
+  paidMinor     Int       @default(0)
+  currency      String    @default("USD")
   invoiceNumber String?
   notes         String?
   sentAt        DateTime?
   dueAt         DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  workOrder WorkOrder?     @relation(fields: [workOrderId], references: [id])
+  workOrder WorkOrder?        @relation(fields: [workOrderId], references: [id])
   lineItems InvoiceLineItem[]
   payments  Payment[]
 
@@ -480,14 +481,14 @@ model Invoice {
 }
 
 model InvoiceLineItem {
-  id           String @id @default(uuid())
-  invoiceId    String
-  description  String
-  quantity     Int    @default(1)
-  unitPriceMinor Int
-  totalMinor   Int
+  id                  String   @id @default(uuid())
+  invoiceId           String
+  description         String
+  quantity            Int      @default(1)
+  unitPriceMinor      Int
+  totalMinor          Int
   serviceNameSnapshot String?
-  createdAt    DateTime @default(now())
+  createdAt           DateTime @default(now())
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
@@ -502,6 +503,9 @@ model Payment {
   currency          String    @default("USD")
   status            String    @default("CREATED") // CREATED | REQUIRES_ACTION | PROCESSING | SUCCEEDED | FAILED | REFUNDED | DISPUTED
   paymentMethod     String?
+  externalReference String?
+  note              String?
+  recordedById      String?
   refundAmountMinor Int?
   refundReason      String?
   paidAt            DateTime?
@@ -521,7 +525,7 @@ model Payment {
 model ShopSubscription {
   id                   String    @id @default(uuid())
   shopId               String    @unique
-  planName             String    // STARTER | GROWTH | PRO
+  planName             String // STARTER | GROWTH | PRO
   status               String    @default("TRIALING") // TRIALING | ACTIVE | PAST_DUE | PAUSED | CANCELLED | INCOMPLETE
   stripeSubscriptionId String?   @unique
   stripeCustomerId     String?
@@ -539,11 +543,11 @@ model ShopSubscription {
 }
 
 model PlanEntitlement {
-  id          String @id @default(uuid())
-  planName    String // STARTER | GROWTH | PRO
-  featureKey  String
-  limitValue  Int?
-  enabled     Boolean @default(true)
+  id         String  @id @default(uuid())
+  planName   String // STARTER | GROWTH | PRO
+  featureKey String
+  limitValue Int?
+  enabled    Boolean @default(true)
 
   @@unique([planName, featureKey])
   @@map("plan_entitlements")
@@ -554,17 +558,17 @@ model PlanEntitlement {
 // =============================================================================
 
 model Notification {
-  id           String   @id @default(uuid())
-  userId       String
-  type         String   // INVITATION_CREATED | APPOINTMENT_REQUESTED | APPOINTMENT_CONFIRMED | etc.
-  title        String
-  body         String
-  channel      String   // PUSH | SMS | EMAIL | IN_APP
-  status       String   @default("PENDING") // PENDING | SENT | DELIVERED | FAILED
-  data         Json?
-  idempotencyKey String? @unique
-  readAt       DateTime?
-  createdAt    DateTime @default(now())
+  id             String    @id @default(uuid())
+  userId         String
+  type           String // INVITATION_CREATED | APPOINTMENT_REQUESTED | APPOINTMENT_CONFIRMED | etc.
+  title          String
+  body           String
+  channel        String // PUSH | SMS | EMAIL | IN_APP
+  status         String    @default("PENDING") // PENDING | SENT | DELIVERED | FAILED
+  data           Json?
+  idempotencyKey String?   @unique
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -600,14 +604,14 @@ model AuditEvent {
 // =============================================================================
 
 model WebhookEvent {
-  id          String   @id @default(uuid())
-  provider    String   // STRIPE | TWILIO
-  providerEventId String @unique
-  eventType   String
-  payload     Json
-  processed   Boolean  @default(false)
-  processedAt DateTime?
-  createdAt   DateTime @default(now())
+  id              String    @id @default(uuid())
+  provider        String // STRIPE | TWILIO
+  providerEventId String    @unique
+  eventType       String
+  payload         Json
+  processed       Boolean   @default(false)
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
 
   @@index([provider, processed])
   @@map("webhook_events")

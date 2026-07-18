@@ -12,7 +12,8 @@ Revvy gives auto-service shops one place to manage customers, vehicles, appointm
 - **Backend:** NestJS modular monolith (TypeScript)
 - **Database:** PostgreSQL with Prisma ORM
 - **Auth:** Supabase Auth (phone OTP)
-- **Payments:** Stripe Billing + Connect
+- **Pilot payments:** External collection recorded by authorized shop staff
+- **Shop subscriptions:** Stripe Billing (later production phase)
 - **SMS:** Twilio
 - **Monorepo:** pnpm workspaces + Turborepo
 
@@ -20,7 +21,7 @@ Revvy gives auto-service shops one place to manage customers, vehicles, appointm
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js >= 22
 - pnpm >= 9
 - PostgreSQL (local or managed)
 
@@ -37,8 +38,8 @@ cp .env.example .env
 # Generate Prisma client
 pnpm db:generate
 
-# Run database migrations
-pnpm db:migrate
+# Apply committed database migrations
+pnpm db:migrate:deploy
 
 # Seed the database
 pnpm db:seed
@@ -56,6 +57,24 @@ pnpm --filter @revvy/api dev
 # Start only the mobile app
 pnpm --filter @revvy/mobile dev
 ```
+
+Development builds expose `/role-picker` for product demos. Set
+`EXPO_PUBLIC_ENABLE_ROLE_PICKER=false` to exercise the real Supabase OTP entry flow; production
+builds always enter the authenticated flow.
+
+## Implemented production slice
+
+The registered API surface is intentionally limited to the implemented foundation and first
+owner slice:
+
+- Supabase access-token validation and local user resolution
+- Idempotent owner shop creation with owner membership, onboarding, and trial subscription
+- Shop-scoped, role-authorized service creation, publishing, and archiving
+- Idempotent external-payment recording for authorized shop staff
+- Request IDs, structured/redacted HTTP logs, standard error envelopes, and health endpoints
+
+Other domain modules remain source scaffolds and are not registered in `AppModule` until their
+authorization, persistence, contracts, and tests are implemented.
 
 ### Useful Commands
 
@@ -75,6 +94,9 @@ pnpm build
 # Open Prisma Studio
 pnpm db:studio
 ```
+
+CI uses `prisma migrate deploy` against an ephemeral PostgreSQL database. It never uses
+`prisma db push`, and lint commands do not rewrite source files.
 
 ## Repository Structure
 

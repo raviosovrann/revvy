@@ -1,38 +1,76 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  CreateServiceRequest,
+  CreateServiceSchema,
+  UpdateServiceRequest,
+  UpdateServiceSchema,
+} from '@revvy/contracts';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { ShopContextGuard } from '../../common/guards/shop-context.guard';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CatalogService } from './catalog.service';
 
-@Controller()
-@UseGuards(AuthGuard)
+@Controller('shops/:shopId/services')
+@Roles('OWNER', 'MANAGER')
+@UseGuards(AuthGuard, ShopContextGuard, RolesGuard)
 export class CatalogController {
   constructor(private readonly catalogService: CatalogService) {}
 
-  @Get('shops/:shopId/services')
+  @Get()
   listServices(@Param('shopId') shopId: string) {
     return this.catalogService.listByShop(shopId);
   }
 
-  @Post('shops/:shopId/services')
-  createService(@Param('shopId') shopId: string, @Body() body: Record<string, unknown>) {
+  @Post()
+  createService(
+    @Param('shopId') shopId: string,
+    @Body(new ZodValidationPipe(CreateServiceSchema))
+    body: CreateServiceRequest,
+  ) {
     return this.catalogService.create(shopId, body);
   }
 
-  @Get('shops/:shopId/services/:serviceId')
-  getService(@Param('shopId') shopId: string, @Param('serviceId') serviceId: string) {
+  @Get(':serviceId')
+  getService(
+    @Param('shopId') shopId: string,
+    @Param('serviceId') serviceId: string,
+  ) {
     return this.catalogService.findById(shopId, serviceId);
   }
 
-  @Patch('shops/:shopId/services/:serviceId')
+  @Patch(':serviceId')
   updateService(
     @Param('shopId') shopId: string,
     @Param('serviceId') serviceId: string,
-    @Body() body: Record<string, unknown>,
+    @Body(new ZodValidationPipe(UpdateServiceSchema))
+    body: UpdateServiceRequest,
   ) {
     return this.catalogService.update(shopId, serviceId, body);
   }
 
-  @Post('shops/:shopId/services/:serviceId/archive')
-  archiveService(@Param('shopId') shopId: string, @Param('serviceId') serviceId: string) {
+  @Post(':serviceId/publish')
+  publishService(
+    @Param('shopId') shopId: string,
+    @Param('serviceId') serviceId: string,
+  ) {
+    return this.catalogService.publish(shopId, serviceId);
+  }
+
+  @Post(':serviceId/archive')
+  archiveService(
+    @Param('shopId') shopId: string,
+    @Param('serviceId') serviceId: string,
+  ) {
     return this.catalogService.archive(shopId, serviceId);
   }
 }

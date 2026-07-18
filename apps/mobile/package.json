@@ -19,6 +19,7 @@
     "@react-navigation/native": "^7.0.0",
     "@supabase/supabase-js": "^2.45.1",
     "@tanstack/react-query": "^5.51.23",
+    "@revvy/contracts": "workspace:*",
     "@expo/metro-runtime": "^6.1.2",
     "expo": "~54.0.0",
     "expo-camera": "~17.0.10",

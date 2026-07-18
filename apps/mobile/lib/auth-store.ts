@@ -1,41 +1,99 @@
+import { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { apiClient } from './api-client';
+import { supabase } from './supabase';
 
-type UserRole = 'owner' | 'manager' | 'front_desk' | 'technician' | 'customer';
+export type UserRole =
+  'OWNER' | 'MANAGER' | 'FRONT_DESK' | 'TECHNICIAN' | 'CUSTOMER';
 
-type ShopContext = {
+export type ShopContext = {
   shopId: string;
   shopName: string;
   role: UserRole;
+  status?: string;
 };
 
 type AuthState = {
+  session: Session | null;
   userId: string | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   activeShop: ShopContext | null;
   shops: ShopContext[];
-  setAuth: (userId: string, shops: ShopContext[]) => void;
+  initialize: () => Promise<() => void>;
+  refreshShops: () => Promise<ShopContext[]>;
   setActiveShop: (shop: ShopContext) => void;
-  clearAuth: () => void;
+  clearAuth: () => Promise<void>;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
+async function applySession(session: Session | null) {
+  apiClient.setToken(session?.access_token || null);
+  useAuthStore.setState({
+    session,
+    userId: session?.user.id || null,
+    isAuthenticated: Boolean(session),
+    ...(session ? {} : { shops: [], activeShop: null }),
+  });
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  session: null,
   userId: null,
   isAuthenticated: false,
+  isInitialized: false,
   activeShop: null,
   shops: [],
-  setAuth: (userId, shops) =>
-    set({
-      userId,
-      isAuthenticated: true,
-      shops,
-      activeShop: shops.length > 0 ? shops[0] : null,
-    }),
+
+  initialize: async () => {
+    const { data } = await supabase.auth.getSession();
+    await applySession(data.session);
+    if (data.session) {
+      await get()
+        .refreshShops()
+        .catch(() => set({ shops: [], activeShop: null }));
+    }
+    set({ isInitialized: true });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        void applySession(session).then(() => {
+          if (session) {
+            void get()
+              .refreshShops()
+              .catch(() => set({ shops: [], activeShop: null }));
+          }
+        });
+      },
+    );
+    return () => listener.subscription.unsubscribe();
+  },
+
+  refreshShops: async () => {
+    const session =
+      get().session || (await supabase.auth.getSession()).data.session;
+    if (!session) return [];
+    await applySession(session);
+    const response = await apiClient.get<{ shops: ShopContext[] }>('/me/shops');
+    const currentShopId = get().activeShop?.shopId;
+    const activeShop =
+      response.shops.find((shop) => shop.shopId === currentShopId) ||
+      response.shops[0] ||
+      null;
+    set({ shops: response.shops, activeShop });
+    return response.shops;
+  },
+
   setActiveShop: (shop) => set({ activeShop: shop }),
-  clearAuth: () =>
+
+  clearAuth: async () => {
+    await supabase.auth.signOut();
+    apiClient.setToken(null);
     set({
+      session: null,
       userId: null,
       isAuthenticated: false,
       activeShop: null,
       shops: [],
-    }),
+    });
+  },
 }));

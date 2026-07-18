@@ -1,6 +1,6 @@
 # ADR-003: Payment Money Movement
 
-**Status:** Proposed  
+**Status:** Accepted
 **Date:** 2026-07-18  
 **Deciders:** Product Owner, Engineering, Legal/Accounting
 
@@ -10,14 +10,18 @@ Revvy needs to handle customer invoice payments to shops. The Stripe integration
 
 ## Decision
 
-Pending. Options under evaluation:
+The first pilot records customer payments collected **outside Revvy**. Authorized shop staff can record cash, card-terminal, check, bank-transfer, or other external payments against an invoice with an idempotency key and audit metadata.
 
-- **Stripe Connect (destination charges):** Revvy collects payment and routes funds to shop accounts
-- **Separate direct shop accounts:** Each shop has its own Stripe account; Revvy facilitates but doesn't touch funds
-- **Postpone in-app payments for V1:** Record external/cash payments first, add Stripe later
+Stripe Connect customer payments are deferred until the pilot validates workflow demand and legal/accounting owners approve the money-movement model. Stripe Billing remains the intended later mechanism for Revvy's own shop subscriptions and is a separate concern.
+
+## Alternatives Considered
+
+- **Stripe Connect destination charges:** Deferred pending merchant-of-record, fee, refund, dispute, tax, and New York compliance review.
+- **Separate direct shop accounts:** Deferred because operational and reconciliation requirements still need validation.
 
 ## Consequences
 
-- Legal/accounting review required before real-money launch
-- Affects Stripe onboarding flow for shop owners
-- Determines refund/dispute ownership and handling
+- The pilot does not collect card data or move customer funds.
+- External-payment recording must be staff-only, idempotent, auditable, and expressed in integer minor units.
+- Customer PaymentSheet, payment-session, Connect onboarding, and customer-payment webhook stories are post-pilot.
+- Legal/accounting review is still required before any future in-app customer payment launch.

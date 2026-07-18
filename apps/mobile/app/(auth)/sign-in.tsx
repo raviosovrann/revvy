@@ -1,35 +1,65 @@
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { colors, spacing, typography } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 
 type Role = 'customer' | 'owner' | 'tech';
 
 const ROLES: { key: Role; label: string; desc: string }[] = [
-  { key: 'customer', label: 'Customer', desc: 'Book service, approve estimates, pay invoices' },
-  { key: 'owner', label: 'Owner / Manager', desc: 'Run the shop, team, services, and bookings' },
-  { key: 'tech', label: 'Technician', desc: 'Execute jobs, inspections, and notes' },
+  {
+    key: 'customer',
+    label: 'Customer',
+    desc: 'Book service, approve estimates, and view history',
+  },
+  {
+    key: 'owner',
+    label: 'Owner / Manager',
+    desc: 'Create or operate your shop',
+  },
+  { key: 'tech', label: 'Technician', desc: 'Open work assigned by your shop' },
 ];
 
 export default function SignInScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<Role>('customer');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleContinue = () => {
-    // V1 scaffold: skip real phone verification for product exploration
-    if (role === 'customer') router.replace('/(customer)');
-    else if (role === 'owner') router.replace('/(owner)');
-    else router.replace('/(tech)');
+  const handleContinue = async () => {
+    const normalizedPhone = phone.replace(/[\s()-]/g, '');
+    if (!/^\+[1-9]\d{7,14}$/.test(normalizedPhone)) {
+      setErrorMessage(
+        'Enter a phone number with country code, for example +12125550123.',
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: normalizedPhone,
+    });
+    setSubmitting(false);
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    router.push({
+      pathname: '/(auth)/verify-otp',
+      params: { phone: normalizedPhone, role },
+    });
   };
 
   return (
@@ -44,24 +74,27 @@ export default function SignInScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>Sign In</Text>
           <Text style={styles.description}>
-            Choose your role and enter your phone number.
+            Choose your workspace and verify your phone number.
           </Text>
 
           <Text style={styles.sectionLabel}>I am a</Text>
           <View style={styles.roleList}>
-            {ROLES.map((r) => (
+            {ROLES.map((item) => (
               <TouchableOpacity
-                key={r.key}
-                style={[styles.roleOption, role === r.key && styles.roleOptionActive]}
-                onPress={() => setRole(r.key)}
+                key={item.key}
+                style={[
+                  styles.roleOption,
+                  role === item.key && styles.roleOptionActive,
+                ]}
+                onPress={() => setRole(item.key)}
                 activeOpacity={0.8}
               >
                 <View style={styles.radio}>
-                  {role === r.key && <View style={styles.radioInner} />}
+                  {role === item.key && <View style={styles.radioInner} />}
                 </View>
                 <View style={styles.roleText}>
-                  <Text style={styles.roleLabel}>{r.label}</Text>
-                  <Text style={styles.roleDesc}>{r.desc}</Text>
+                  <Text style={styles.roleLabel}>{item.label}</Text>
+                  <Text style={styles.roleDesc}>{item.desc}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -70,23 +103,25 @@ export default function SignInScreen() {
           <Text style={styles.sectionLabel}>Phone number</Text>
           <TextInput
             style={styles.input}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+1 (212) 555-0123"
             placeholderTextColor={colors.textMuted}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
             autoComplete="tel"
-            autoFocus
             returnKeyType="done"
-            onSubmitEditing={handleContinue}
+            onSubmitEditing={() => void handleContinue()}
           />
-
+          {errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
           <TouchableOpacity
-            style={styles.button}
-            onPress={handleContinue}
+            style={[styles.button, submitting && styles.buttonDisabled]}
+            onPress={() => void handleContinue()}
+            disabled={submitting}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Continue</Text>
+            <Text style={styles.buttonText}>
+              {submitting ? 'Sending…' : 'Continue'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -95,18 +130,9 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  content: {
-    padding: spacing.xxl,
-    justifyContent: 'center',
-  },
+  container: { flex: 1, backgroundColor: colors.bg },
+  scrollContent: { flexGrow: 1, justifyContent: 'center' },
+  content: { padding: spacing.xxl, justifyContent: 'center' },
   title: {
     fontFamily: typography.heading.fontFamily,
     fontWeight: typography.heading.fontWeight,
@@ -126,10 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.lg,
   },
-  roleList: {
-    flexDirection: 'column',
-    gap: spacing.md,
-  },
+  roleList: { flexDirection: 'column', gap: spacing.md },
   roleOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,9 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: colors.accent,
   },
-  roleText: {
-    flex: 1,
-  },
+  roleText: { flex: 1 },
   roleLabel: {
     fontFamily: typography.heading.fontFamily,
     fontWeight: typography.heading.fontWeight,
@@ -179,19 +200,18 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     fontSize: typography.size.lg,
     color: colors.text,
-    marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.divider,
   },
+  error: { color: colors.error, marginTop: spacing.sm },
   button: {
     backgroundColor: colors.accent,
     paddingVertical: spacing.lg,
     borderRadius: spacing.md,
     alignItems: 'center',
+    marginTop: spacing.lg,
   },
-  buttonDisabled: {
-    backgroundColor: colors.accentDark,
-  },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: {
     color: colors.text,
     fontSize: typography.size.base,

@@ -1,12 +1,13 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigationContainerRef } from '@react-navigation/native';
 
 export function useResetToHome() {
-  const navigation = useNavigation<any>();
+  const navigationRef = useNavigationContainerRef();
   return () => {
-    // Reset the root navigation container to its initial route (the landing page).
-    navigation.resetRoot({
-      index: 0,
-      routes: [{ name: 'index' }],
-    });
+    if (navigationRef.isReady()) {
+      navigationRef.resetRoot({
+        index: 0,
+        routes: [{ name: 'index' }],
+      });
+    }
   };
 }

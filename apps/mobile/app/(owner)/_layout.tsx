@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '@/constants/theme';
-import { DashboardIcon, CalendarIcon, PeopleIcon, GearIcon, MenuIcon } from '@/components/icons';
+import { DashboardIcon, CalendarIcon, PeopleIcon, GearIcon, MoreIcon } from '@/components/icons';
 
 const TAB_NAMES = ['index', 'calendar', 'customers', 'services', 'more'];
 
@@ -11,7 +11,7 @@ function TabBar({ state, descriptors, navigation }: any) {
     calendar: <CalendarIcon size={20} color={colors.textMuted} />,
     customers: <PeopleIcon size={20} color={colors.textMuted} />,
     services: <GearIcon size={20} color={colors.textMuted} />,
-    more: <MenuIcon size={20} color={colors.textMuted} />,
+    more: <MoreIcon size={20} color={colors.textMuted} />,
   };
 
   const activeIcons: Record<string, React.ReactNode> = {
@@ -19,7 +19,7 @@ function TabBar({ state, descriptors, navigation }: any) {
     calendar: <CalendarIcon size={20} color={colors.accent} />,
     customers: <PeopleIcon size={20} color={colors.accent} />,
     services: <GearIcon size={20} color={colors.accent} />,
-    more: <MenuIcon size={20} color={colors.accent} />,
+    more: <MoreIcon size={20} color={colors.accent} />,
   };
 
   const activeRouteName = state.routes[state.index]?.name;

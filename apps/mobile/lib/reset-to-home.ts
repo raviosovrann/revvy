@@ -1,13 +1,7 @@
-import { useNavigationContainerRef } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 export function useResetToHome() {
-  const navigationRef = useNavigationContainerRef();
-  return () => {
-    if (navigationRef.isReady()) {
-      navigationRef.current?.resetRoot({
-        index: 0,
-        routes: [{ name: 'index' }],
-      });
-    }
-  };
+  const router = useRouter();
+
+  return () => router.replace('/role-picker');
 }

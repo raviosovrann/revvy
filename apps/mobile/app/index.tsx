@@ -1,5 +1,5 @@
-import { RoleSelectorScreen } from '@/components/role-selector-screen';
+import { Redirect } from 'expo-router';
 
 export default function IndexScreen() {
-  return <RoleSelectorScreen />;
+  return <Redirect href="/role-picker" />;
 }

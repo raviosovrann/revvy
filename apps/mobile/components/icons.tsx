@@ -58,6 +58,10 @@ export function MenuIcon(props: IconProps) {
   return <Icon {...props}>☰</Icon>;
 }
 
+export function MoreIcon(props: IconProps) {
+  return <Icon {...props}>•••</Icon>;
+}
+
 export function ListIcon(props: IconProps) {
   return <Icon {...props}>☰</Icon>;
 }

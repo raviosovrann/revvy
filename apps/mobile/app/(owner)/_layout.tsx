@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '@/constants/theme';
-import { GridIcon, CalendarIcon, PeopleIcon, ListIcon, MenuIcon } from '@/components/icons';
+import { GridIcon, CalendarIcon, PeopleIcon, GearIcon, MenuIcon } from '@/components/icons';
 
 const TAB_NAMES = ['index', 'calendar', 'customers', 'services', 'more'];
 
@@ -10,7 +10,7 @@ function TabBar({ state, descriptors, navigation }: any) {
     index: <GridIcon size={20} color={colors.textMuted} />,
     calendar: <CalendarIcon size={20} color={colors.textMuted} />,
     customers: <PeopleIcon size={20} color={colors.textMuted} />,
-    services: <ListIcon size={20} color={colors.textMuted} />,
+    services: <GearIcon size={20} color={colors.textMuted} />,
     more: <MenuIcon size={20} color={colors.textMuted} />,
   };
 
@@ -18,7 +18,7 @@ function TabBar({ state, descriptors, navigation }: any) {
     index: <GridIcon size={20} color={colors.accent} />,
     calendar: <CalendarIcon size={20} color={colors.accent} />,
     customers: <PeopleIcon size={20} color={colors.accent} />,
-    services: <ListIcon size={20} color={colors.accent} />,
+    services: <GearIcon size={20} color={colors.accent} />,
     more: <MenuIcon size={20} color={colors.accent} />,
   };
 

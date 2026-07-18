@@ -58,6 +58,10 @@ export function ListIcon(props: IconProps) {
   return <Icon {...props}>☰</Icon>;
 }
 
+export function GearIcon(props: IconProps) {
+  return <Icon {...props}>⚙️</Icon>;
+}
+
 export function SearchIcon(props: IconProps) {
   return <Icon {...props}>🔍</Icon>;
 }

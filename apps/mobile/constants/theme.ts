@@ -1,21 +1,34 @@
 export const colors = {
   // Background
-  bg: '#1a1a2e',
-  surface: '#2a2a3e',
-  surfaceLight: '#3a3a4e',
+  bg: '#000000',
+  surface: '#0f0f10',
+  surfaceLight: '#1c1c1e',
 
   // Text
   text: '#ffffff',
-  textSecondary: '#a0a0b0',
-  textMuted: '#6b6b7b',
+  textSecondary: '#a1a1aa',
+  textMuted: '#71717a',
 
   // Brand
-  accent: '#4f46e5',
-  accentDark: '#3730a3',
-  accentLight: '#818cf8',
+  blue: '#3b82f6',
+  blueDark: '#2563eb',
+  blueLight: '#60a5fa',
+  purple: '#8b5cf6',
+  purpleDark: '#7c3aed',
+  purpleLight: '#a78bfa',
+
+  // Primary action (blue = stability/dependability)
+  accent: '#3b82f6',
+  accentDark: '#2563eb',
+  accentLight: '#60a5fa',
+
+  // Secondary highlight (purple = wisdom/luxury/creativity)
+  secondary: '#8b5cf6',
+  secondaryDark: '#7c3aed',
+  secondaryLight: '#a78bfa',
 
   // Semantic
-  success: '#10b981',
+  success: '#22c55e',
   warning: '#f59e0b',
   error: '#ef4444',
   info: '#3b82f6',
@@ -32,7 +45,7 @@ export const colors = {
   neutral900: '#0f172a',
 
   // Divider
-  divider: '#3a3a4e',
+  divider: '#27272a',
 };
 
 export const spacing = {

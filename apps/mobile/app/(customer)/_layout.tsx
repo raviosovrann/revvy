@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '@/constants/theme';
 import { HomeIcon, CalendarIcon, CarIcon, UserIcon } from '@/components/icons';
 
+const TAB_NAMES = ['index', 'appointments', 'garage', 'profile'];
+
 function TabBar({ state, descriptors, navigation }: any) {
   const icons: Record<string, React.ReactNode> = {
     index: <HomeIcon size={20} color={colors.textMuted} />,
@@ -18,14 +20,15 @@ function TabBar({ state, descriptors, navigation }: any) {
     profile: <UserIcon size={20} color={colors.accent} />,
   };
 
+  const activeRouteName = state.routes[state.index]?.name;
+  const visibleRoutes = state.routes.filter((route: any) => TAB_NAMES.includes(route.name));
+
   return (
     <View style={styles.tabBar}>
-      {state.routes
-        .filter((route: any) => descriptors[route.key].options.href !== null)
-        .map((route: any, index: number) => {
+      {visibleRoutes.map((route: any) => {
         const { options } = descriptors[route.key];
         const label = options.tabBarLabel || options.title || route.name;
-        const isFocused = state.index === index;
+        const isFocused = activeRouteName === route.name;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -48,7 +51,9 @@ function TabBar({ state, descriptors, navigation }: any) {
           >
             <View style={styles.tabContent}>
               {isFocused ? activeIcons[route.name] : icons[route.name]}
-              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>{label}</Text>
+              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]} numberOfLines={1}>
+                {label}
+              </Text>
             </View>
             {isFocused && <View style={styles.activeIndicator} />}
           </TouchableOpacity>
@@ -107,6 +112,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textMuted,
     marginTop: 2,
+    textAlign: 'center',
   },
   tabLabelActive: {
     color: colors.accent,

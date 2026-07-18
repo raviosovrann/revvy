@@ -1,4 +1,13 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
@@ -7,37 +16,64 @@ export default function CreateShopScreen() {
   const [phone, setPhone] = useState('');
 
   const handleContinue = () => {
+    if (!phone.trim()) return;
     // TODO: Implement shop creation flow with OTP verification
     router.push({ pathname: '/(auth)/verify-otp', params: { phone, flow: 'create-shop' } });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create a Shop</Text>
-      <Text style={styles.description}>Get started with your auto-service business on Revvy.</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>Create a Shop</Text>
+          <Text style={styles.description}>
+            Get started with your auto-service business on Revvy.
+          </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="+1 (555) 000-0000"
-        placeholderTextColor="#666"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        autoComplete="tel"
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="+1 (555) 000-0000"
+            placeholderTextColor="#666"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleContinue}
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity
+            style={[styles.button, !phone.trim() && styles.buttonDisabled]}
+            onPress={handleContinue}
+            disabled={!phone.trim()}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     backgroundColor: '#1a1a2e',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  content: {
+    padding: 24,
     justifyContent: 'center',
   },
   title: {
@@ -64,6 +100,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#4f46e5aa',
   },
   buttonText: {
     color: '#ffffff',
